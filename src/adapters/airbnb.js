@@ -168,6 +168,19 @@ function sidebarButton(predicate) {
     return side ? [...side.querySelectorAll('button')].find(predicate) ?? null : null;
 }
 
+/** Attend qu'un bouton de la barre latérale satisfasse le prédicat. */
+async function waitForSidebarButton(predicate, timeout = 5000) {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+        const button = sidebarButton(predicate);
+        if (button) {
+            return button;
+        }
+        await sleep(150);
+    }
+    return null;
+}
+
 async function waitUntilDeselected(timeout = 3000) {
     const deadline = Date.now() + timeout;
     while (Date.now() < deadline) {
@@ -310,16 +323,16 @@ export default {
             throw new Error(`Sélection inattendue pour ${from} → ${to} : ${selected.length} nuit(s) sélectionnée(s) au lieu de ${expected.length}.`);
         }
 
-        const card = sidebarButton((b) => /Prix par nuit/.test(b.innerText));
+        const card = await waitForSidebarButton((b) => /Prix par nuit/.test(b.innerText), 8000);
         if (!card) {
+            const shown = document.querySelector(SEL.sidebar)?.innerText.replace(/\s+/g, ' ').slice(0, 160) ?? 'barre latérale absente';
             await closeSidebar();
-            throw new Error('Carte « Prix par nuit » introuvable dans la barre latérale.');
+            throw new Error(`Carte « Prix par nuit » introuvable dans la barre latérale (${shown}).`);
         }
         card.click();
-        await sleep(800);
-        let input = document.querySelector(SEL.priceInput);
+        let input = await waitFor(SEL.priceInput, { timeout: 3000 }).catch(() => null);
         if (!input) {
-            const rangeButton = sidebarButton((b) => PRICE_RANGE_RE.test(b.innerText));
+            const rangeButton = await waitForSidebarButton((b) => PRICE_RANGE_RE.test(b.innerText), 3000);
             rangeButton?.click();
             input = await waitFor(SEL.priceInput, { timeout: 5000 }).catch(() => null);
         }
