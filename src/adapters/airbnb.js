@@ -157,6 +157,22 @@ function sidebarButton(predicate) {
     return side ? [...side.querySelectorAll('button')].find(predicate) ?? null : null;
 }
 
+async function waitUntilDeselected(timeout = 3000) {
+    const deadline = Date.now() + timeout;
+    while (Date.now() < deadline) {
+        if (!selectedDates().length) {
+            return true;
+        }
+        await sleep(200);
+    }
+    return false;
+}
+
+/**
+ * Referme la barre latérale et désélectionne toutes les nuits : bouton
+ * Fermer, puis touche Échap, puis clic sur chaque nuit encore sélectionnée
+ * (un clic sur une nuit sélectionnée la désélectionne).
+ */
 async function closeSidebar() {
     for (let i = 0; i < 3 && document.querySelector(SEL.sidebar); i++) {
         const cancel = sidebarButton((b) => b.innerText.trim() === 'Annuler');
@@ -169,10 +185,26 @@ async function closeSidebar() {
             break;
         }
         close.click();
-        await sleep(500);
+        if (await waitUntilDeselected(1500)) {
+            return;
+        }
     }
-    if (selectedDates().length) {
-        throw new Error('Impossible de désélectionner les nuits en cours.');
+    if (await waitUntilDeselected(1500)) {
+        return;
+    }
+    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    if (await waitUntilDeselected(1000)) {
+        return;
+    }
+    for (const date of selectedDates()) {
+        const btn = await scrollToDate(date).catch(() => null);
+        if (btn) {
+            btn.click();
+            await sleep(300);
+        }
+    }
+    if (!(await waitUntilDeselected(2000))) {
+        throw new Error(`Impossible de désélectionner les nuits en cours (${selectedDates().join(', ')}).`);
     }
 }
 
