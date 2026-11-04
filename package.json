@@ -1,0 +1,14 @@
+{
+  "name": "bnb-calendar-prices-sync",
+  "version": "0.1.0",
+  "description": "Extension navigateur : export, import et report annuel des prix du calendrier Airbnb / Abritel",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "zip": "mkdir -p dist && rm -f dist/extension.zip && zip -r dist/extension.zip manifest.json src -x '*.DS_Store'"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

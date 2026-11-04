@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "BnB Calendar Prices Sync",
+  "version": "0.1.0",
+  "description": "Exporte, importe et reporte d'une année sur l'autre les prix du calendrier Airbnb et Abritel.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.airbnb.fr/*",
+    "https://*.airbnb.com/*",
+    "https://*.abritel.fr/*",
+    "https://*.vrbo.com/*",
+    "https://data.education.gouv.fr/*",
+    "https://calendrier.api.gouv.fr/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "BnB Calendar Prices Sync"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.airbnb.fr/*",
+        "https://*.airbnb.com/*",
+        "https://*.abritel.fr/*",
+        "https://*.vrbo.com/*"
+      ],
+      "js": [
+        "src/content/loader.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/adapters/*.js",
+        "src/core/*.js",
+        "src/ui/*"
+      ],
+      "matches": [
+        "https://*.airbnb.fr/*",
+        "https://*.airbnb.com/*",
+        "https://*.abritel.fr/*",
+        "https://*.vrbo.com/*"
+      ]
+    }
+  ]
+}

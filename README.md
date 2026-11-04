@@ -1,0 +1,90 @@
+# BnB Calendar Prices Sync
+
+Extension Chrome (Manifest V3) pour gérer les prix du calendrier d'une location
+saisonnière sur Airbnb et Abritel / Vrbo, sans API ni abonnement : elle agit
+dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
+
+## Fonctionnalités
+
+- **Exporter** les prix d'une année, nuit par nuit, dans un fichier JSON.
+- **Importer** un JSON et l'appliquer au calendrier d'un site.
+- **Reporter une année sur la suivante** en suivant les vacances scolaires :
+  les prix de l'année N sont traduits en règles par période (Noël, hiver zone A,
+  hiver zones A+B, été, hors vacances…), puis réappliqués sur les dates
+  correspondantes de l'année N+1, qui ne tombent jamais aux mêmes dates.
+- **Ne jamais écraser un prix déjà personnalisé** : seules les nuits encore au
+  prix de base sont modifiées. Le prix de base est détecté automatiquement sur
+  les nuits lointaines du calendrier et doit être confirmé par vous.
+- **Simulation obligatoire** avant application : la liste exacte des plages et
+  des prix est affichée, avec les nuits ignorées et la raison.
+- **Transfert entre plateformes** : un coefficient et un arrondi permettent
+  d'appliquer la grille Airbnb sur Abritel avec un prix ajusté.
+
+Les vacances scolaires viennent de l'open data de l'Éducation nationale
+(`fr-en-calendrier-scolaire`), les jours fériés de `calendrier.api.gouv.fr`.
+
+## Installation (mode développeur)
+
+1. `chrome://extensions`, activer le mode développeur.
+2. « Charger l'extension non empaquetée » et choisir ce dossier.
+3. Ouvrir le calendrier hôte du site, puis cliquer sur l'icône de l'extension :
+   le panneau s'ouvre par-dessus la page (déplaçable, repliable). Un second clic
+   le ferme. Les prix chargés sont conservés d'une ouverture à l'autre.
+
+## Format JSON
+
+```json
+{
+  "version": 1,
+  "site": "airbnb",
+  "listingId": "123456",
+  "currency": "EUR",
+  "exportedAt": "2026-11-04T10:00:00.000Z",
+  "basePrice": 150,
+  "days": {
+    "2027-02-06": { "price": 220, "custom": true, "available": true }
+  }
+}
+```
+
+## Structure
+
+```
+manifest.json
+src/
+  core/        logique métier, indépendante du navigateur (testée en Node)
+  adapters/    lecture et écriture du calendrier de chaque site
+  content/     script de contenu qui charge l'adaptateur et le panneau
+  ui/          panneau injecté dans la page (Shadow DOM)
+  background.js
+test/
+```
+
+## État
+
+Le cœur métier est testé (`npm test`).
+
+- **Airbnb** : adaptateur calibré sur le calendrier hôte (`/multicalendar/<id>`)
+  en novembre 2026. Lecture par défilement de la liste virtualisée, écriture par
+  sélection de plage (clic puis maj+clic) et formulaire « Prix par nuit ».
+  Chaque étape vérifie l'état de la page et s'interrompt sans enregistrer en
+  cas de doute.
+- **Abritel / Vrbo** : adaptateur calibré sur le calendrier propriétaire
+  (`/p/calendar/<id>`) en novembre 2026. Lecture depuis la vue « Année »
+  (toutes les nuits ont un prix, même passées ou réservées), écriture par
+  sélection de plage et formulaire « Tarifs et réductions ».
+
+Limites connues sur Airbnb :
+
+- les nuits passées et les nuits réservées n'affichent pas de prix, elles sont
+  absentes de l'export et ignorées à l'application. Exportez une année **avant**
+  qu'elle ne commence si vous voulez la garder comme référence ;
+- Airbnb n'indique pas si un prix est personnalisé : une nuit est considérée
+  comme personnalisée quand son prix diffère du prix de base.
+
+## Avertissement
+
+L'automatisation d'un site, même depuis son propre navigateur, n'est pas
+prévue par les conditions d'utilisation des plateformes. Utilisez l'extension
+avec parcimonie, en vérifiant chaque simulation, et uniquement sur vos propres
+annonces.
