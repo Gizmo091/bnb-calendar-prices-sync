@@ -321,13 +321,14 @@ async function mountPanel(adapter) {
             basePrice,
             overwriteCustom: $('overwrite').checked,
             weekdayPattern: adapter.supportsWeekdayPattern === true,
+            notBefore: today(),
         });
         renderPlan(state.plan);
         $('apply').disabled = state.plan.ops.length === 0;
     }
 
     function renderPlan(p) {
-        $('plan-summary').textContent = `${p.changed} nuits à modifier en ${p.ops.length} opérations · ${p.unchanged} déjà au bon prix · ${p.skipped.length} ignorées.`;
+        $('plan-summary').textContent = `${p.changed} nuits à modifier en ${p.ops.length} opérations · ${p.unchanged} déjà au bon prix · ${p.skipped.length} ignorées${p.past ? ` · ${p.past} passées non traitées` : ''}.`;
         const tbody = $('plan-table').querySelector('tbody');
         tbody.innerHTML = '';
         for (const op of p.ops) {

@@ -10,15 +10,22 @@ import { toRanges, toWeekdayRanges } from './ranges.js';
  *
  * Avec `weekdayPattern`, les opérations sont des périodes à motif hebdomadaire
  * (voir `toWeekdayRanges`), bien moins nombreuses que les plages simples.
+ * Les nuits antérieures à `notBefore` (en général la date du jour) sont
+ * écartées et seulement comptées.
  *
  * @param {Object<string,{price:number,custom?:boolean}>} current
  * @param {Object<string,{price:number}>} proposed
  */
-export function planUpdates(current, proposed, { basePrice, overwriteCustom = false, weekdayPattern = false } = {}) {
+export function planUpdates(current, proposed, { basePrice, overwriteCustom = false, weekdayPattern = false, notBefore = null } = {}) {
     const toApply = {};
     const skipped = [];
     let unchanged = 0;
+    let past = 0;
     for (const [date, next] of Object.entries(proposed)) {
+        if (notBefore && date < notBefore) {
+            past += 1;
+            continue;
+        }
         const cur = current[date];
         if (!cur || typeof cur.price !== 'number') {
             skipped.push({ date, reason: 'unknown' });
@@ -36,5 +43,5 @@ export function planUpdates(current, proposed, { basePrice, overwriteCustom = fa
         toApply[date] = next.price;
     }
     const ops = weekdayPattern ? toWeekdayRanges(toApply) : toRanges(toApply);
-    return { ops, skipped, unchanged, changed: Object.keys(toApply).length };
+    return { ops, skipped, unchanged, past, changed: Object.keys(toApply).length };
 }

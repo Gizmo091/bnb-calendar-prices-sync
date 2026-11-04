@@ -29,6 +29,9 @@ test('planUpdates n\'écrase pas les prix personnalisés', () => {
     assert.deepEqual(plan.skipped.map((s) => `${s.date}:${s.reason}`), ['2027-02-08:custom', '2027-02-09:custom', '2027-02-11:unknown']);
     const forced = planUpdates(current, proposed, { basePrice: 150, overwriteCustom: true });
     assert.equal(forced.changed, 4);
+    const dated = planUpdates(current, proposed, { basePrice: 150, notBefore: '2027-02-07' });
+    assert.equal(dated.past, 1, 'le 6 février est écarté');
+    assert.deepEqual(dated.ops, [{ from: '2027-02-07', to: '2027-02-07', price: 220, nights: 1 }]);
 });
 
 test('detectBasePrice regarde au-delà de l\'horizon', () => {
