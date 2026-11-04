@@ -81,6 +81,10 @@ Limites connues sur Airbnb :
   toutes les nuits, passées et réservées comprises. Si cette requête change,
   l'adaptateur se replie sur le calendrier affiché, où ces nuits n'ont pas de
   prix. Les nuits réservées sont lues mais jamais modifiées ;
+- le prix lu est le prix nominal fixé par l'hôte. Sur une nuit couverte par une
+  promotion Airbnb, le calendrier affiche le prix remisé ; l'export garde le
+  prix nominal et signale la promotion (`promotion`). Le repli sur le
+  calendrier affiché, lui, lirait le prix remisé ;
 - Airbnb n'indique pas si un prix est personnalisé : une nuit est considérée
   comme personnalisée quand son prix diffère du prix de base.
 

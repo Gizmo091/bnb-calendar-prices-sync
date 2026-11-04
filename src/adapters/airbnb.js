@@ -18,6 +18,10 @@
  * - la page charge ses données par une requête GraphQL persistée
  *   (`getDLSHostCalendar`) dont la réponse donne `priceData.price` pour chaque
  *   nuit, y compris les nuits passées et réservées que l'interface masque.
+ *   Ce prix est le prix nominal fixé par l'hôte : sur une nuit couverte par
+ *   une promotion, le calendrier affiche le prix remisé, la requête donne le
+ *   prix nominal et `promotionType` (vérifié : 398 € nominal, 318 € affiché
+ *   avec 20 % de réduction).
  *   La lecture rejoue cette requête (URL retrouvée dans les entrées de
  *   performance de la page, clé d'API dans son HTML) sur une année entière,
  *   et ne se replie sur le défilement du calendrier qu'en cas d'échec.
@@ -146,7 +150,14 @@ async function readCalendarFromApi(from, to) {
             if (typeof price !== 'number' || d.day < from || d.day > to) {
                 continue;
             }
-            days[d.day] = { price, available: d.available === true, reserved: Boolean(d.reservationData) };
+            days[d.day] = {
+                price,
+                available: d.available === true,
+                reserved: Boolean(d.reservationData),
+                // Prix nominal : une promotion éventuelle (ex. « 20 % de réduction »)
+                // est signalée à part, le calendrier affiché montrant lui le prix remisé.
+                promotion: d.priceData.promotionType ?? null,
+            };
         }
     }
     return days;
