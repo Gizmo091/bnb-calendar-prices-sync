@@ -6,7 +6,8 @@ import { toRanges, toWeekdayRanges } from './ranges.js';
  * sauf demande explicite.
  *
  * Une nuit est considérée comme personnalisée si le site l'indique (`custom`)
- * ou, à défaut, si son prix diffère du prix de base.
+ * ou, à défaut, si son prix diffère du prix de base. Une nuit réservée
+ * (`reserved`) ne peut plus être tarifée et reste telle quelle.
  *
  * Avec `weekdayPattern`, les opérations sont des périodes à motif hebdomadaire
  * (voir `toWeekdayRanges`), bien moins nombreuses que les plages simples.
@@ -33,6 +34,10 @@ export function planUpdates(current, proposed, { basePrice, overwriteCustom = fa
         }
         if (cur.price === next.price) {
             unchanged += 1;
+            continue;
+        }
+        if (cur.reserved) {
+            skipped.push({ date, reason: 'reserved', current: cur.price, proposed: next.price });
             continue;
         }
         const isCustom = typeof cur.custom === 'boolean' ? cur.custom : cur.price !== basePrice;

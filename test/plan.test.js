@@ -21,14 +21,15 @@ test('planUpdates n\'écrase pas les prix personnalisés', () => {
         '2027-02-08': { price: 199, custom: true },
         '2027-02-09': { price: 199 },
         '2027-02-10': { price: 220 },
+        '2027-02-12': { price: 150, reserved: true },
     };
     const proposed = Object.fromEntries(Object.keys(current).concat('2027-02-11').map((d) => [d, { price: 220 }]));
     const plan = planUpdates(current, proposed, { basePrice: 150 });
     assert.deepEqual(plan.ops, [{ from: '2027-02-06', to: '2027-02-07', price: 220, nights: 2 }]);
     assert.equal(plan.unchanged, 1);
-    assert.deepEqual(plan.skipped.map((s) => `${s.date}:${s.reason}`), ['2027-02-08:custom', '2027-02-09:custom', '2027-02-11:unknown']);
+    assert.deepEqual(plan.skipped.map((s) => `${s.date}:${s.reason}`), ['2027-02-08:custom', '2027-02-09:custom', '2027-02-12:reserved', '2027-02-11:unknown']);
     const forced = planUpdates(current, proposed, { basePrice: 150, overwriteCustom: true });
-    assert.equal(forced.changed, 4);
+    assert.equal(forced.changed, 4, 'une nuit réservée reste exclue même en écrasant les prix personnalisés');
     const dated = planUpdates(current, proposed, { basePrice: 150, notBefore: '2027-02-07' });
     assert.equal(dated.past, 1, 'le 6 février est écarté');
     assert.deepEqual(dated.ops, [{ from: '2027-02-07', to: '2027-02-07', price: 220, nights: 1 }]);

@@ -77,9 +77,10 @@ Le cœur métier est testé (`npm test`).
 
 Limites connues sur Airbnb :
 
-- les nuits passées et les nuits réservées n'affichent pas de prix, elles sont
-  absentes de l'export et ignorées à l'application. Exportez une année **avant**
-  qu'elle ne commence si vous voulez la garder comme référence ;
+- la lecture passe par la requête interne du calendrier, qui donne le prix de
+  toutes les nuits, passées et réservées comprises. Si cette requête change,
+  l'adaptateur se replie sur le calendrier affiché, où ces nuits n'ont pas de
+  prix. Les nuits réservées sont lues mais jamais modifiées ;
 - Airbnb n'indique pas si un prix est personnalisé : une nuit est considérée
   comme personnalisée quand son prix diffère du prix de base.
 

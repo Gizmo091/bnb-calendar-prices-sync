@@ -14,10 +14,16 @@
  *   « 90 € – 160 € » à cliquer quand les prix de la sélection diffèrent) et
  *   bouton `[data-testid="nightlyPriceForm-submit"]` ;
  * - le prix de base est lisible dans le panneau de droite (« Tarification »)
- *   quand aucune nuit n'est sélectionnée.
+ *   quand aucune nuit n'est sélectionnée ;
+ * - la page charge ses données par une requête GraphQL persistée
+ *   (`getDLSHostCalendar`) dont la réponse donne `priceData.price` pour chaque
+ *   nuit, y compris les nuits passées et réservées que l'interface masque.
+ *   La lecture rejoue cette requête (URL retrouvée dans les entrées de
+ *   performance de la page, clé d'API dans son HTML) sur une année entière,
+ *   et ne se replie sur le défilement du calendrier qu'en cas d'échec.
  */
 import { parsePrice, priceInText, sleep, waitFor, setInputValue } from './common.js';
-import { eachDay } from '../core/dates.js';
+import { eachDay, yearOf, yearBounds } from '../core/dates.js';
 
 const SITE = 'airbnb';
 const CALIBRATED = true;
@@ -92,6 +98,60 @@ async function scrollToDate(date) {
     throw new Error(`La date ${date} n'a pas été trouvée dans le calendrier.`);
 }
 
+const API_OPERATION = 'getDLSHostCalendar';
+
+/** URL complète de la dernière requête calendrier émise par la page. */
+function calendarQueryUrl() {
+    const entries = performance.getEntriesByType('resource').map((e) => e.name);
+    return entries.reverse().find((u) => u.includes(`/api/v3/${API_OPERATION}/`)) ?? null;
+}
+
+function apiKey() {
+    return document.documentElement.innerHTML.match(/"api_config":\{"key":"([^"]+)"/)?.[1] ?? null;
+}
+
+async function fetchCalendarDays(baseUrl, key, startDate, endDate) {
+    const url = new URL(baseUrl);
+    const variables = JSON.parse(url.searchParams.get('variables'));
+    url.searchParams.set('variables', JSON.stringify({ ...variables, startDate, endDate }));
+    const response = await fetch(url, {
+        headers: { 'x-airbnb-api-key': key, 'x-airbnb-graphql-platform': 'web' },
+        credentials: 'include',
+    });
+    if (!response.ok) {
+        throw new Error(`API calendrier : HTTP ${response.status}`);
+    }
+    const json = await response.json();
+    const days = json?.data?.presentation?.hostCalendar?.sections?.calendarGridViewSection?.days;
+    if (!Array.isArray(days)) {
+        throw new Error(json?.errors?.[0]?.message ?? 'API calendrier : réponse inattendue');
+    }
+    return days;
+}
+
+/** Lecture par l'API interne, une requête par année civile couverte. */
+async function readCalendarFromApi(from, to) {
+    const baseUrl = calendarQueryUrl();
+    const key = apiKey();
+    if (!baseUrl || !key) {
+        throw new Error('requête calendrier introuvable dans la page');
+    }
+    const days = {};
+    for (let year = yearOf(from); year <= yearOf(to); year++) {
+        const bounds = yearBounds(year);
+        const start = from > bounds.from ? from : bounds.from;
+        const end = to < bounds.to ? to : bounds.to;
+        for (const d of await fetchCalendarDays(baseUrl, key, start, end)) {
+            const price = d?.priceData?.price;
+            if (typeof price !== 'number' || d.day < from || d.day > to) {
+                continue;
+            }
+            days[d.day] = { price, available: d.available === true, reserved: Boolean(d.reservationData) };
+        }
+    }
+    return days;
+}
+
 function sidebarButton(predicate) {
     const side = document.querySelector(SEL.sidebar);
     return side ? [...side.querySelectorAll('button')].find(predicate) ?? null : null;
@@ -136,10 +196,21 @@ export default {
     },
 
     /**
-     * Lit les nuits de `from` à `to`. Les nuits passées et les nuits réservées
-     * n'affichent pas de prix et sont absentes du résultat.
+     * Lit les nuits de `from` à `to` : par l'API interne (toutes les nuits,
+     * y compris passées et réservées), sinon par le calendrier affiché, où
+     * les nuits passées et réservées n'ont pas de prix.
      */
     async readCalendar({ from, to }) {
+        try {
+            return await readCalendarFromApi(from, to);
+        }
+        catch (e) {
+            console.warn(`[bnb-calendar-prices-sync] lecture par l'API impossible (${e.message}), repli sur le calendrier affiché`);
+            return this.readCalendarFromDom({ from, to });
+        }
+    },
+
+    async readCalendarFromDom({ from, to }) {
         const list = scroller();
         const days = {};
         const collect = () => {

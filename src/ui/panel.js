@@ -343,7 +343,7 @@ async function mountPanel(adapter) {
             const li = document.createElement('li');
             const reasons = {
                 custom: `déjà personnalisé (${s.current} ≠ ${s.proposed})`,
-                unavailable: `réservée ou bloquée (${s.current} conservé)`,
+                reserved: `réservée (${s.current} conservé)`,
                 unknown: 'absente du calendrier',
             };
             li.textContent = `${s.date} : ${reasons[s.reason] ?? s.reason}`;
