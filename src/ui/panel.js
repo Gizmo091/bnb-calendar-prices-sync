@@ -48,12 +48,13 @@ const TEMPLATE = `
     </section>
 
     <section>
-      <h2>3. Reporter sur l'année suivante</h2>
+      <h2>3. Reporter sur l'année suivante, ou reprendre tels quels</h2>
       <div class="row">
         <label>Vers <input id="target-year" type="number" min="2020" max="2100"></label>
         <label>Coef. <input id="factor" type="number" min="0.1" step="0.01" value="1"></label>
         <label>Arrondi <input id="rounding" type="number" min="1" step="1" value="1"></label>
         <button id="project" type="button" disabled>Calculer la projection</button>
+        <button id="as-is" type="button" disabled title="Reprend les nuits chargées sans projection, sur la même année">Appliquer tels quels</button>
       </div>
       <details id="rules-details" hidden>
         <summary>Règles inférées</summary>
@@ -159,6 +160,7 @@ async function mountPanel(adapter) {
         $('read-summary').textContent = `${count} nuits chargées (${origin}) pour ${year}.`;
         $('export').disabled = count === 0;
         $('project').disabled = count === 0;
+        $('as-is').disabled = count === 0;
         $('plan').disabled = true;
         $('apply').disabled = true;
         suggestBasePrice(days, year);
@@ -266,6 +268,26 @@ async function mountPanel(adapter) {
         catch (e) {
             log(e.message, 'error');
         }
+    }
+
+    /** Même année, sans projection : les nuits chargées deviennent les prix proposés. */
+    function useAsIs() {
+        const factor = Number($('factor').value) || 1;
+        const rounding = Number($('rounding').value) || 1;
+        const proposed = {};
+        for (const [date, day] of Object.entries(state.days)) {
+            if (typeof day.price === 'number') {
+                proposed[date] = { price: day.price, source: 'import', rule: null };
+            }
+        }
+        state.proposed = scalePrices(proposed, factor, rounding);
+        state.targetYear = state.year;
+        state.rules = null;
+        $('target-year').value = state.year;
+        $('rules-details').hidden = true;
+        log(`${Object.keys(state.proposed).length} nuits de ${state.year} reprises telles quelles${factor !== 1 ? ` (× ${factor})` : ''}`, 'ok');
+        $('plan').disabled = false;
+        persist();
     }
 
     function renderRules(rules) {
@@ -391,6 +413,7 @@ async function mountPanel(adapter) {
     $('export').addEventListener('click', exportJson);
     $('import').addEventListener('change', (e) => e.target.files[0] && importJson(e.target.files[0]));
     $('project').addEventListener('click', project);
+    $('as-is').addEventListener('click', useAsIs);
     $('plan').addEventListener('click', plan);
     $('apply').addEventListener('click', apply);
     $('close').addEventListener('click', () => host.remove());

@@ -17,8 +17,9 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
   les nuits lointaines du calendrier et doit être confirmé par vous.
 - **Simulation obligatoire** avant application : la liste exacte des plages et
   des prix est affichée, avec les nuits ignorées et la raison.
-- **Transfert entre plateformes** : un coefficient et un arrondi permettent
-  d'appliquer la grille Airbnb sur Abritel avec un prix ajusté.
+- **Transfert entre plateformes** : « Appliquer tels quels » reprend un JSON
+  exporté d'un site sur l'autre, pour la même année, avec un coefficient et un
+  arrondi optionnels pour ajuster le prix.
 
 Les vacances scolaires viennent de l'open data de l'Éducation nationale
 (`fr-en-calendrier-scolaire`), les jours fériés de `calendrier.api.gouv.fr`.
