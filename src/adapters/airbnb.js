@@ -27,6 +27,7 @@
  *   et ne se replie sur le défilement du calendrier qu'en cas d'échec.
  */
 import { parsePrice, priceInText, sleep, waitFor, setInputValue } from './common.js';
+import { t } from '../core/i18n.js';
 import { eachDay, yearOf, yearBounds } from '../core/dates.js';
 
 const SITE = 'airbnb';
@@ -49,7 +50,7 @@ const SCROLL_WAIT = 250;
 function scroller() {
     const el = document.querySelector(SEL.scroller);
     if (!el) {
-        throw new Error('Calendrier introuvable : ouvrez la page « Calendrier » de l\'annonce.');
+        throw new Error(t('err_calendar_missing'));
     }
     return el;
 }
@@ -89,7 +90,7 @@ async function scrollToDate(date) {
             if (list.scrollTop === 0) {
                 await sleep(600);
                 if (!document.querySelector(SEL.dayAt(date)) && visibleDates()[0] === dates[0]) {
-                    throw new Error(`La date ${date} n'est pas atteignable dans le calendrier.`);
+                    throw new Error(t('err_date_unreachable', date));
                 }
             }
             list.scrollTop = Math.max(0, list.scrollTop - SCROLL_STEP);
@@ -99,7 +100,7 @@ async function scrollToDate(date) {
         }
         await sleep(SCROLL_WAIT);
     }
-    throw new Error(`La date ${date} n'a pas été trouvée dans le calendrier.`);
+    throw new Error(t('err_date_not_found', date));
 }
 
 const API_OPERATION = 'getDLSHostCalendar';
@@ -162,12 +163,12 @@ async function fetchCalendarDays(baseUrl, key, startDate, endDate) {
         credentials: 'include',
     });
     if (!response.ok) {
-        throw new Error(`API calendrier : HTTP ${response.status}`);
+        throw new Error(t('err_api_http', response.status));
     }
     const json = await response.json();
     const days = json?.data?.presentation?.hostCalendar?.sections?.calendarGridViewSection?.days;
     if (!Array.isArray(days)) {
-        throw new Error(json?.errors?.[0]?.message ?? 'API calendrier : réponse inattendue');
+        throw new Error(json?.errors?.[0]?.message ?? t('err_api_unexpected'));
     }
     return days;
 }
@@ -177,7 +178,7 @@ async function readCalendarFromApi(from, to) {
     const baseUrl = calendarQueryUrl();
     const key = apiKey();
     if (!baseUrl || !key) {
-        throw new Error('requête calendrier introuvable dans la page');
+        throw new Error(t('err_api_request_missing'));
     }
     const days = {};
     for (let year = yearOf(from); year <= yearOf(to); year++) {
@@ -267,7 +268,7 @@ async function closeSidebar() {
         }
     }
     if (!(await waitUntilDeselected(2000))) {
-        throw new Error(`Impossible de désélectionner les nuits en cours (${selectedDates().join(', ')}).`);
+        throw new Error(t('err_deselect', selectedDates().join(', ')));
     }
 }
 
@@ -361,14 +362,14 @@ export default {
         const selected = selectedDates();
         if (selected.join() !== expected.join()) {
             await closeSidebar();
-            throw new Error(`Sélection inattendue pour ${from} → ${to} : ${selected.length} nuit(s) sélectionnée(s) au lieu de ${expected.length}.`);
+            throw new Error(t('err_selection_airbnb', from, to, selected.length, expected.length));
         }
 
         const card = await waitForSidebarButton((b) => /Prix par nuit/.test(b.innerText), 8000);
         if (!card) {
-            const shown = document.querySelector(SEL.sidebar)?.innerText.replace(/\s+/g, ' ').slice(0, 160) ?? 'barre latérale absente';
+            const shown = document.querySelector(SEL.sidebar)?.innerText.replace(/\s+/g, ' ').slice(0, 160) ?? t('sidebar_missing');
             await closeSidebar();
-            throw new Error(`Carte « Prix par nuit » introuvable dans la barre latérale (${shown}).`);
+            throw new Error(t('err_price_card', shown));
         }
         card.click();
         let input = await waitFor(SEL.priceInput, { timeout: 3000 }).catch(() => null);
@@ -379,14 +380,14 @@ export default {
         }
         if (!input) {
             await closeSidebar();
-            throw new Error('Champ de prix introuvable.');
+            throw new Error(t('err_price_field'));
         }
         setInputValue(input, price);
         await sleep(500);
         const submit = document.querySelector(SEL.submit);
         if (!submit || submit.disabled) {
             await closeSidebar();
-            throw new Error(submit ? 'Le bouton Enregistrer reste désactivé (prix identique ?).' : 'Bouton Enregistrer introuvable.');
+            throw new Error(t(submit ? 'err_submit_disabled' : 'err_submit_missing'));
         }
         submit.click();
         for (let i = 0; i < 40 && document.querySelector(SEL.priceInput); i++) {
@@ -394,13 +395,13 @@ export default {
         }
         if (document.querySelector(SEL.priceInput)) {
             await closeSidebar();
-            throw new Error('Le formulaire de prix ne s\'est pas fermé après Enregistrer.');
+            throw new Error(t('err_form_not_closed'));
         }
         await sleep(600);
         const check = parseDayButton(document.querySelector(SEL.dayAt(from)) ?? (await scrollToDate(from)));
         await closeSidebar();
         if (check && check.price !== price) {
-            throw new Error(`Le calendrier affiche ${check.price} € pour ${from} au lieu de ${price} €.`);
+            throw new Error(t('err_price_mismatch', check.price, from, price));
         }
         return { from, to, price };
     },

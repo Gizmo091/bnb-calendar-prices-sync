@@ -4,6 +4,7 @@
  * dans le stockage local.
  */
 import { buildCalendarContext } from './core/holidays.js';
+import { t } from './core/i18n.js';
 
 const CACHE_TTL_MS = 7 * 24 * 3600 * 1000;
 
@@ -30,7 +31,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
                 sendResponse({ ok: true, result: await getCalendarContext(msg.year) });
             }
             else {
-                throw new Error(`Action inconnue : ${msg.action}`);
+                throw new Error(t('err_unknown_action', msg.action));
             }
         }
         catch (e) {

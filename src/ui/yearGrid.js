@@ -12,7 +12,7 @@
  * - `selectable` : la nuit peut être choisie au clic ou au glisser, quand la
  *   grille a un `onSelect`.
  */
-import { eachDay, yearBounds, weekday } from '../core/index.js';
+import { eachDay, yearBounds, weekday, t, currentLocale } from '../core/index.js';
 
 const FLAGS = ['reserved', 'blocked', 'past'];
 
@@ -144,7 +144,6 @@ function attachTooltip(el) {
         }
     });
 }
-const MONTHS = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin', 'juil', 'aoû', 'sep', 'oct', 'nov', 'déc'];
 const LEVELS = 5;
 
 /**
@@ -167,7 +166,7 @@ export function renderYearGrid(el, year, cells, { legend = [], onSelect = null }
             month = m;
             const label = document.createElement('span');
             label.className = 'month';
-            label.textContent = MONTHS[m];
+            label.textContent = t(`month_${m + 1}`);
             label.style.gridColumn = '1';
             label.style.gridRow = String(m + 1);
             el.append(label);
@@ -207,7 +206,7 @@ export function renderYearGrid(el, year, cells, { legend = [], onSelect = null }
                     strip.append(step);
                 }
                 li.className = 'range';
-                li.title = `Prix des nuits, du plus bas (${min} €) au plus haut (${max} €)`;
+                li.title = t('legend_scale_title', min, max);
                 li.append(document.createTextNode(`${min} €`), strip, document.createTextNode(`${max} €${item.label ? ` ${item.label}` : ''}`));
                 ul.append(li);
                 continue;
@@ -285,8 +284,6 @@ export function priceLevels(days) {
     return { levels, min: prices[0], max: prices[prices.length - 1] };
 }
 
-const DAY_FORMAT = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-
 export function describeDate(date) {
-    return DAY_FORMAT.format(new Date(`${date}T00:00:00Z`));
+    return new Intl.DateTimeFormat(currentLocale(), { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`));
 }

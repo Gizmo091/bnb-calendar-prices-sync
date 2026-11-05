@@ -14,7 +14,7 @@ import {
     inferRules, generateYear,
     detectBasePrice, planUpdates, opsForDates,
     createExport, validateExport, scalePrices, exportFileName,
-    describeOp, eachDay,
+    describeOp, eachDay, t, translateDom,
 } from '../core/index.js';
 import { renderYearGrid, priceLevels, describeDate } from './yearGrid.js';
 
@@ -28,14 +28,12 @@ const BIND_RETRY_MS = 500;
 /** Les fichiers de prix sont du JSON, sous une extension propre à l'extension pour être reconnus. */
 const FILE_EXTENSION = '.bnbprices';
 
-const SKIP_LABELS = {
-    custom: 'déjà personnalisée',
-    reserved: 'réservée',
-    unknown: 'absente du calendrier',
-};
+const SKIP_LABELS = { custom: 'skip_custom', reserved: 'skip_reserved', unknown: 'skip_unknown' };
 
 const html = await (await fetch(new URL('template.html', import.meta.url))).text();
 document.body.innerHTML = html;
+translateDom(document.body);
+document.title = t('ext_name');
 const $ = (id) => document.getElementById(id);
 
 /* ---------- Liaison à l'onglet ---------- */
@@ -48,17 +46,17 @@ let state = null;
 
 async function callAdapter(method, ...args) {
     if (boundTab === null) {
-        throw new Error('Aucun onglet lié au panneau');
+        throw new Error(t('err_no_tab'));
     }
     let response;
     try {
         response = await chrome.tabs.sendMessage(boundTab, { target: 'adapter', method, args });
     }
     catch {
-        throw new Error('La page ne répond pas : ouvrez un calendrier Airbnb ou Abritel, ou rechargez l\'onglet');
+        throw new Error(t('err_page_unresponsive'));
     }
     if (!response?.ok) {
-        throw new Error(response?.error ?? 'Erreur inconnue dans la page');
+        throw new Error(response?.error ?? t('err_page_unknown'));
     }
     return response.result;
 }
@@ -66,7 +64,7 @@ async function callAdapter(method, ...args) {
 async function callBackground(action, params = {}) {
     const response = await chrome.runtime.sendMessage({ target: 'background', action, ...params });
     if (!response?.ok) {
-        throw new Error(response?.error ?? 'Pas de réponse du service worker');
+        throw new Error(response?.error ?? t('err_no_worker'));
     }
     return response.result;
 }
@@ -114,11 +112,13 @@ async function bind(tabId) {
         watchListingName(tabId);
     }
     if (!info.listingId) {
-        $('notice').innerHTML = `Cette page n'est pas le calendrier d'une annonce. Ouvrez-le pour lire ou modifier les prix : <code>${info.calendarUrl ?? ''}</code>`;
+        const code = document.createElement('code');
+        code.textContent = info.calendarUrl ?? '';
+        $('notice').replaceChildren(t('notice_not_calendar'), code);
         $('notice').hidden = false;
         $('read').disabled = true;
     }
-    log(`Onglet lié : ${site.label}${describeListing(info.listingId, info.name) ? ` · ${describeListing(info.listingId, info.name)}` : ''}`);
+    log(t('log_bound', `${site.label}${describeListing(info.listingId, info.name) ? ` · ${describeListing(info.listingId, info.name)}` : ''}`));
 
     // Les prix conservés ne reviennent que sur l'annonce où ils ont été chargés.
     const saved = info.listingId ? (await chrome.storage.local.get(storageKey))[storageKey] : null;
@@ -129,7 +129,7 @@ async function bind(tabId) {
         if (saved.targetYear) {
             $('target-year').value = saved.targetYear;
         }
-        setDays(saved.days, saved.year, 'conservées de la session précédente');
+        setDays(saved.days, saved.year, t('origin_restored'));
     }
 }
 
@@ -154,7 +154,7 @@ function resetUi() {
     for (const id of ['export', 'plan']) {
         $(id).disabled = true;
     }
-    setApply(false, 'Lisez ou importez des prix, puis prévisualisez');
+    setApply(false, t('hint_read_first'));
     $('progress').hidden = true;
 }
 
@@ -166,13 +166,13 @@ function setProgress(doneNights, totalNights, { failed = false } = {}) {
     el.classList.toggle('failed', failed);
     el.setAttribute('aria-valuenow', String(percent));
     el.querySelector('.track i').style.setProperty('--w', `${percent}%`);
-    el.querySelector('.count').textContent = `${doneNights}/${totalNights} nuits`;
+    el.querySelector('.count').textContent = t('progress_nights', doneNights, totalNights);
 }
 
 /** Active les boutons d'application, ou les inactive en disant pourquoi. */
 function setApply(enabled, reason = '') {
     $('apply').disabled = !enabled;
-    $('apply-hint').textContent = enabled ? 'Cliquez ou glissez sur la grille pour n\'appliquer qu\'une partie des nuits' : reason;
+    $('apply-hint').textContent = enabled ? t('hint_select') : reason;
     syncSelectionButton();
 }
 
@@ -180,7 +180,7 @@ function setApply(enabled, reason = '') {
 function syncSelectionButton() {
     const count = state?.planGrid?.selected().length ?? 0;
     $('apply-selection').disabled = $('apply').disabled || count === 0;
-    $('apply-selection').textContent = count ? `Appliquer à la sélection (${count} nuit${count > 1 ? 's' : ''})` : 'Appliquer à la sélection';
+    $('apply-selection').textContent = count > 1 ? t('btn_apply_selection_count', count) : count === 1 ? t('btn_apply_selection_one') : t('btn_apply_selection');
 }
 
 function log(message, level = 'info') {
@@ -220,7 +220,7 @@ const NAME_RETRY_MS = [1000, 2000, 4000, 8000];
 
 function showSiteInfo() {
     const listing = describeListing(state?.listingId, state?.listingName);
-    $('site-info').textContent = `${site.label}${listing ? ` · ${listing}` : ''}${site.calibrated ? '' : ' · adaptateur non calibré'}`;
+    $('site-info').textContent = `${site.label}${listing ? ` · ${listing}` : ''}${site.calibrated ? '' : t('site_uncalibrated')}`;
     $('site-info').title = $('site-info').textContent;
 }
 
@@ -256,7 +256,7 @@ function describeListing(listingId, name) {
     if (name) {
         return name;
     }
-    return listingId ? `annonce ${listingId}` : '';
+    return listingId ? t('listing_id', listingId) : '';
 }
 
 /* ---------- 1. Lecture, export, import ---------- */
@@ -266,23 +266,23 @@ function setDays(days, year, origin) {
     state.year = year;
     $('year').value = year;
     const count = Object.keys(days).length;
-    $('read-summary').textContent = `${count} nuits de ${year} ${origin}`;
+    $('read-summary').textContent = t('days_summary', count, year, origin);
     lockSteps(count === 0);
     $('read-result').hidden = false;
     syncMode();
     renderDays(days, year);
     $('export').disabled = count === 0;
     $('plan').disabled = count === 0;
-    setApply(false, 'Prévisualisez d\'abord');
+    setApply(false, t('hint_plan_first'));
     suggestBasePrice(days, year);
-    log(`${count} nuits de ${year} ${origin}`, 'ok');
+    log(t('days_summary', count, year, origin), 'ok');
     persist();
 }
 
 /** Apparence d'une nuit chargée : un palier d'accent par niveau de prix, réservée ou bloquée par-dessus. */
 function dayCell(date, day, levels) {
-    const price = typeof day.price === 'number' ? `${day.price} €` : 'prix inconnu';
-    const notes = [day.reserved ? 'réservée' : '', day.available === false ? 'bloquée' : '', day.promotion ? 'promotion' : ''].filter(Boolean);
+    const price = typeof day.price === 'number' ? `${day.price} €` : t('price_unknown');
+    const notes = [day.reserved ? t('note_reserved') : '', day.available === false ? t('note_blocked') : '', day.promotion ? t('note_promotion') : ''].filter(Boolean);
     return {
         level: levels[date],
         flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [],
@@ -300,8 +300,8 @@ function renderDays(days, year) {
     const seen = new Set(Object.values(cells).flatMap((c) => c.flags));
     const legend = min === undefined ? [] : [
         { scale: [min, max] },
-        ...(seen.has('reserved') ? [{ flags: ['reserved'], label: 'réservée' }] : []),
-        ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
+        ...(seen.has('reserved') ? [{ flags: ['reserved'], label: t('note_reserved') }] : []),
+        ...(seen.has('blocked') ? [{ flags: ['blocked'], label: t('note_blocked') }] : []),
     ];
     renderYearGrid($('read-grid'), year, cells, { legend });
 }
@@ -309,7 +309,7 @@ function renderDays(days, year) {
 /** Grille de l'année en attente de lecture, affichée dans l'encart des prix chargés. */
 function pendingReadGrid(year) {
     const { from, to } = yearBounds(year);
-    const cells = Object.fromEntries(eachDay(from, to).map((d) => [d, { state: 'pending', title: `${describeDate(d)} · en attente` }]));
+    const cells = Object.fromEntries(eachDay(from, to).map((d) => [d, { state: 'pending', title: `${describeDate(d)} · ${t('cell_waiting')}` }]));
     $('read-result').hidden = false;
     $('export').disabled = true;
     return renderYearGrid($('read-grid'), year, cells);
@@ -342,14 +342,14 @@ async function suggestBasePrice(days, year) {
         const farDays = await callAdapter('readCalendar', { from: farFrom, to: farTo });
         const far = detectBasePrice(farDays, { horizonMonths: 0, from: farFrom });
         if (far.price !== null) {
-            log(`Prix de base : ${far.price} € sur ${far.samples} nuits de fin de calendrier (${Math.round(far.share * 100)} %)`);
+            log(t('log_base_far', far.price, far.samples, Math.round(far.share * 100)));
             if (far.share >= CONFIDENT_SHARE) {
                 confident = far.price;
             }
         }
     }
     catch (e) {
-        log(`Fin de calendrier illisible (${e.message}), prix de base estimé sur les nuits chargées`, 'error');
+        log(t('log_base_far_failed', e.message), 'error');
     }
     const fromSite = site?.hasBasePrice ? await callAdapter('basePrice').catch(() => null) : null;
     const loaded = detectBasePrice(days, { horizonMonths: 0, from: `${year}-01-01` });
@@ -358,13 +358,13 @@ async function suggestBasePrice(days, year) {
         $('base-price').value = suggested;
     }
     if (confident !== null) {
-        $('base-hint').textContent = `Détecté : ${confident} €`;
+        $('base-hint').textContent = t('base_detected', confident);
     }
     else if (suggested !== null) {
-        $('base-hint').textContent = `Estimé : ${suggested} €, à vérifier`;
+        $('base-hint').textContent = t('base_estimated', suggested);
     }
     else {
-        $('base-hint').textContent = 'Prix de base introuvable, à saisir';
+        $('base-hint').textContent = t('base_missing');
     }
     persist();
 }
@@ -373,24 +373,24 @@ async function suggestBasePrice(days, year) {
 async function readCalendar() {
     const year = Number($('year').value);
     const months = monthRanges(year);
-    log(`Lecture du calendrier de ${year}…`);
+    log(t('log_reading', year));
     $('read').disabled = true;
     try {
         const grid = pendingReadGrid(year);
         const reveal = revealQueue();
         const days = {};
         for (const [i, range] of months.entries()) {
-            $('read-summary').textContent = `Lecture des prix de ${year} · ${i}/${months.length} mois`;
+            $('read-summary').textContent = t('reading_progress', year, i, months.length);
             grid.setState(range.from, 'next');
             const chunk = await callAdapter('readCalendar', range);
             Object.assign(days, chunk);
             await revealDays(grid, days, Object.keys(chunk).sort(), reveal);
         }
-        setDays(days, year, 'lues sur le site, lecture terminée');
+        setDays(days, year, t('origin_read'));
     }
     catch (e) {
         log(e.message, 'error');
-        $('read-summary').textContent = 'La lecture a échoué, voir le journal';
+        $('read-summary').textContent = t('read_failed');
     }
     finally {
         $('read').disabled = false;
@@ -415,7 +415,7 @@ async function exportJson() {
     a.download = exportFileName({ site: doc.site, listingId: doc.listingId, listingName: doc.listingName, year: state.year, extension: FILE_EXTENSION });
     a.click();
     URL.revokeObjectURL(url);
-    log(`Export ${a.download}`, 'ok');
+    log(t('log_export', a.download), 'ok');
 }
 
 async function importJson(file) {
@@ -423,7 +423,7 @@ async function importJson(file) {
         const doc = JSON.parse(await file.text());
         const errors = validateExport(doc);
         if (errors.length) {
-            throw new Error(`Ce fichier n'est pas un fichier de prix de l'extension : ${errors.join(' ; ')}`);
+            throw new Error(t('err_not_price_file', errors.join(' ; ')));
         }
         const years = new Set(Object.keys(doc.days).map(yearOf));
         const year = years.size === 1 ? [...years][0] : Number($('year').value);
@@ -432,15 +432,15 @@ async function importJson(file) {
         }
         $('target-year').value = year + 1;
         const grid = pendingReadGrid(year);
-        $('read-summary').textContent = `Chargement de ${file.name}…`;
+        $('read-summary').textContent = t('loading_file', file.name);
         await revealDays(grid, doc.days, Object.keys(doc.days).sort(), revealQueue(IMPORT_REVEAL_STEP_MS));
-        setDays(doc.days, year, `importées de ${file.name}`);
+        setDays(doc.days, year, t('origin_imported', file.name));
         // Un fichier d'une autre annonce est légitime (transfert entre sites), mais doit se voir.
         if (doc.listingId && (doc.site !== state.site || doc.listingId !== state.listingId)) {
             const origin = `${SITE_LABELS[doc.site] ?? doc.site} · ${describeListing(doc.listingId, doc.listingName)}`;
-            $('read-notice').textContent = `Ces prix viennent d'une autre annonce : ${origin}. Vérifiez que c'est voulu avant d'enregistrer sur le site.`;
+            $('read-notice').textContent = t('notice_other_listing', origin);
             $('read-notice').hidden = false;
-            log(`Prix importés d'une autre annonce : ${origin}`, 'error');
+            log(t('log_other_listing', origin), 'error');
         }
     }
     catch (e) {
@@ -453,18 +453,18 @@ async function importJson(file) {
 async function project() {
     const basePrice = Number($('base-price').value);
     if (!basePrice) {
-        log('Renseignez le prix de base avant de prévisualiser', 'error');
+        log(t('err_base_required'), 'error');
         return false;
     }
     const targetYear = Number($('target-year').value);
     try {
-        log(`Chargement des vacances scolaires et jours fériés ${state.year} et ${targetYear}…`);
+        log(t('log_loading_calendar', state.year, targetYear));
         const [ctxSource, ctxTarget] = await Promise.all([
             callBackground('calendarContext', { year: state.year }),
             callBackground('calendarContext', { year: targetYear }),
         ]);
         if (!ctxTarget.schoolPeriods.some((p) => p.start.startsWith(String(targetYear)) && p.season === 'noel')) {
-            log(`Attention : les vacances de Noël ${targetYear} ne sont pas encore publiées, décembre retombera sur le hors-saison`, 'error');
+            log(t('log_no_christmas', targetYear), 'error');
         }
         const specialDays = readSpecialDays();
         state.rules = inferRules(state.days, labelYear(state.year, ctxSource, { specialDays }));
@@ -476,7 +476,7 @@ async function project() {
         const rounding = Number($('rounding').value) || 1;
         state.proposed = scalePrices(generateYear(targetYear, state.rules, ctxTarget, basePrice, { specialDays }), factor, rounding);
         state.targetYear = targetYear;
-        log(`${Object.keys(state.rules).length} règles déduites, ${Object.keys(state.proposed).length} nuits projetées sur ${targetYear}`, 'ok');
+        log(t('log_projected', Object.keys(state.rules).length, Object.keys(state.proposed).length, targetYear), 'ok');
         persist();
         return true;
     }
@@ -504,7 +504,7 @@ function useAsIs() {
     state.rules = null;
     $('target-year').value = state.year;
     $('rules-details').hidden = true;
-    log(`${Object.keys(state.proposed).length} nuits de ${state.year} reprises telles quelles${factor !== 1 ? ` (× ${factor})` : ''}`, 'ok');
+    log(t('log_as_is', Object.keys(state.proposed).length, state.year, factor !== 1 ? t('factor_suffix', factor) : ''), 'ok');
     persist();
     return true;
 }
@@ -531,6 +531,11 @@ function readSpecialDays() {
 
 /* ---------- Réglages persistants ---------- */
 
+/** Le journal reste tenu même masqué : il réapparaît tel quel. */
+function syncLogVisibility() {
+    $('journal').hidden = !$('show-log').checked;
+}
+
 const SETTINGS_KEY = 'settings';
 
 async function saveSettings() {
@@ -539,7 +544,7 @@ async function saveSettings() {
             factor: $('factor').value,
             rounding: $('rounding').value,
             specialDays: readSpecialDays(),
-            showLog: $('journal').open,
+            showLog: $('show-log').checked,
         },
     });
 }
@@ -561,8 +566,9 @@ async function restoreSettings() {
         }
     }
     if (typeof saved.showLog === 'boolean') {
-        $('journal').open = saved.showLog;
+        $('show-log').checked = saved.showLog;
     }
+    syncLogVisibility();
 }
 
 /** Coefficient saisi avec une virgule ou un point ; null et message si la saisie n'est pas un nombre positif. */
@@ -570,7 +576,7 @@ function readFactor() {
     const raw = $('factor').value.trim().replace(',', '.');
     const factor = raw === '' ? 1 : Number(raw);
     if (!Number.isFinite(factor) || factor <= 0) {
-        log(`Coefficient invalide : « ${$('factor').value} », attendu un nombre comme 1,05`, 'error');
+        log(t('err_factor', $('factor').value), 'error');
         return null;
     }
     return factor;
@@ -579,7 +585,7 @@ function readFactor() {
 /** Projette ou reprend les prix selon le mode choisi, puis compare au calendrier cible. */
 async function simulate() {
     $('plan').disabled = true;
-    setApply(false, 'Prévisualisation en cours');
+    setApply(false, t('hint_previewing'));
     let ready = false;
     try {
         ready = $('mode').value === 'project' ? await project() : useAsIs();
@@ -590,7 +596,7 @@ async function simulate() {
     finally {
         $('plan').disabled = false;
         if (!ready) {
-            setApply(false, 'La prévisualisation a échoué, voir le journal');
+            setApply(false, t('hint_preview_failed'));
         }
     }
 }
@@ -599,8 +605,8 @@ async function simulate() {
 function syncMode() {
     const year = state?.year ?? Number($('year').value);
     const [project, asIs] = $('mode').options;
-    project.textContent = `Reporter les tarifs de ${year} sur une autre année`;
-    asIs.textContent = `Reprendre les tarifs tels quels sur ${year}`;
+    project.textContent = t('mode_project', year);
+    asIs.textContent = t('mode_as_is', year);
     $('target-year-field').hidden = $('mode').value !== 'project';
 }
 
@@ -627,9 +633,9 @@ async function plan() {
     const grid = renderPlanGrid(null);
     const { levels } = priceLevels(state.proposed);
     const reveal = revealQueue();
-    log(`Lecture des prix actuels de ${year} pour comparaison…`);
+    log(t('log_reading_current', year));
     for (const [i, range] of months.entries()) {
-        $('plan-summary').textContent = `Lecture des prix de ${year} · ${i}/${months.length} mois`;
+        $('plan-summary').textContent = t('reading_progress', year, i, months.length);
         grid.setState(range.from, 'next');
         let chunk;
         let failed = false;
@@ -637,7 +643,7 @@ async function plan() {
             chunk = await callAdapter('readCalendar', range);
         }
         catch (e) {
-            log(`${e.message} — prévisualisation faite en supposant les nuits restantes au prix de base`, 'error');
+            log(t('log_read_fallback', e.message), 'error');
             chunk = Object.fromEntries(eachDay(range.from, months[months.length - 1].to).map((d) => [d, { price: basePrice, custom: false }]));
             failed = true;
         }
@@ -666,10 +672,10 @@ async function plan() {
         setApply(true);
     }
     else if (state.plan.skipped.length) {
-        setApply(false, 'Rien à modifier : les nuits restantes sont réservées ou personnalisées');
+        setApply(false, t('hint_nothing_skipped'));
     }
     else {
-        setApply(false, 'Rien à modifier : toutes les nuits sont déjà au bon prix');
+        setApply(false, t('hint_nothing_ok'));
     }
 }
 
@@ -704,18 +710,18 @@ function provisionalReason(cur, next, { basePrice, overwrite }) {
 }
 
 function renderPlan(p) {
-    $('plan-summary').textContent = `${p.changed} nuits à modifier en ${p.ops.length} opérations · ${p.unchanged} déjà au bon prix · ${p.skipped.length} ignorées${p.past ? ` · ${p.past} passées` : ''}`;
+    $('plan-summary').textContent = t('plan_summary', p.changed, p.ops.length, p.unchanged, p.skipped.length) + (p.past ? t('plan_summary_past', p.past) : '');
     const ul = $('skipped-list');
     ul.innerHTML = '';
     for (const s of p.skipped) {
         const li = document.createElement('li');
-        const detail = s.reason === 'custom' ? ` (${s.current} au lieu de ${s.proposed})` : '';
-        li.textContent = `${s.date} · ${SKIP_LABELS[s.reason] ?? s.reason}${detail}`;
+        const detail = s.reason === 'custom' ? t('skip_detail', s.current, s.proposed) : '';
+        li.textContent = `${s.date} · ${SKIP_LABELS[s.reason] ? t(SKIP_LABELS[s.reason]) : s.reason}${detail}`;
         ul.append(li);
     }
     $('skipped-details').hidden = p.skipped.length === 0;
     renderPlanGrid(p);
-    log(`Prévisualisation : ${p.ops.length} opérations, ${p.skipped.length} nuits ignorées`, 'ok');
+    log(t('log_preview', p.ops.length, p.skipped.length), 'ok');
 }
 
 /**
@@ -735,23 +741,23 @@ function planCell(date, cur, next, reason, { basePrice, level }) {
         flags.push('past');
     }
     if (!cur || typeof cur.price !== 'number') {
-        return { state: 'unknown', flags, title: `${describeDate(date)} · absente du calendrier` };
+        return { state: 'unknown', flags, title: `${describeDate(date)} · ${t('cell_unknown')}` };
     }
     const same = cur.price === next.price;
     const isCustom = typeof cur.custom === 'boolean' ? cur.custom : cur.price !== basePrice;
     const kept = reason === 'custom';
     const notes = [];
     if (!same) {
-        notes.push(kept ? 'personnalisée, conservée'
-            : flags.includes('reserved') ? 'réservée, conservée'
-                : flags.includes('past') ? 'passée'
-                    : isCustom ? 'personnalisée, écrasée' : 'à modifier');
+        notes.push(t(kept ? 'note_custom_kept'
+            : flags.includes('reserved') ? 'note_reserved_kept'
+                : flags.includes('past') ? 'note_past'
+                    : isCustom ? 'note_custom_overwritten' : 'note_to_change'));
     }
     else if (flags.includes('reserved')) {
-        notes.push('réservée');
+        notes.push(t('note_reserved'));
     }
     if (flags.includes('blocked')) {
-        notes.push('bloquée');
+        notes.push(t('note_blocked'));
     }
     const title = `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`;
     const applied = !same && !kept && !flags.includes('reserved') && !flags.includes('past');
@@ -778,17 +784,17 @@ function renderPlanGrid(p) {
     for (const [date, next] of Object.entries(proposed)) {
         cells[date] = p
             ? planCell(date, current[date], next, skipped.get(date), { basePrice, level: scale.levels[date] })
-            : { state: 'pending', title: `${describeDate(date)} · lecture en cours` };
+            : { state: 'pending', title: `${describeDate(date)} · ${t('cell_reading')}` };
     }
     const seen = new Set(Object.values(cells).flatMap((c) => [...(c.flags ?? []), c.state]));
     state.planGrid = renderYearGrid($('plan-grid'), state.targetYear, cells, {
         legend: [
-            { scale: [scale.min, scale.max], label: 'à appliquer' },
-            { state: 'ok', label: 'déjà au bon prix' },
-            ...(seen.has('custom') || !p ? [{ state: 'custom', label: 'conservée telle quelle' }] : []),
-            ...(seen.has('reserved') || !p ? [{ flags: ['reserved'], label: 'réservée' }] : []),
-            ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
-            ...(seen.has('past') ? [{ state: 'ok', flags: ['past'], label: 'passée' }] : []),
+            { scale: [scale.min, scale.max], label: t('legend_to_apply') },
+            { state: 'ok', label: t('legend_ok') },
+            ...(seen.has('custom') || !p ? [{ state: 'custom', label: t('legend_kept') }] : []),
+            ...(seen.has('reserved') || !p ? [{ flags: ['reserved'], label: t('note_reserved') }] : []),
+            ...(seen.has('blocked') ? [{ flags: ['blocked'], label: t('note_blocked') }] : []),
+            ...(seen.has('past') ? [{ state: 'ok', flags: ['past'], label: t('note_past') }] : []),
         ],
         onSelect: p ? syncSelectionButton : null,
     });
@@ -831,15 +837,15 @@ function setRunning(running) {
     run.paused = false;
     run.stopped = false;
     run.resume = null;
-    $('pause').textContent = 'Mettre en pause';
+    $('pause').textContent = t('btn_pause');
     $('pause').classList.remove('primary');
 }
 
 function setPaused(paused) {
     run.paused = paused;
-    $('pause').textContent = paused ? 'Reprendre' : 'Mettre en pause';
+    $('pause').textContent = t(paused ? 'btn_resume' : 'btn_pause');
     $('pause').classList.toggle('primary', paused);
-    $('apply-hint').textContent = paused ? 'Pause à la fin de l\'opération en cours' : '';
+    $('apply-hint').textContent = paused ? t('hint_pause_pending') : '';
     if (!paused) {
         run.resume?.();
     }
@@ -849,15 +855,15 @@ function requestStop() {
     run.stopped = true;
     $('stop').disabled = true;
     $('pause').disabled = true;
-    $('apply-hint').textContent = run.resume ? '' : 'Arrêt à la fin de l\'opération en cours';
-    log('Arrêt demandé');
+    $('apply-hint').textContent = run.resume ? '' : t('hint_stop_pending');
+    log(t('log_stop_requested'));
     run.resume?.();
 }
 
 /** Attend la reprise si une pause est demandée ; vrai si l'arrêt a été demandé entre-temps. */
 async function pauseGate(done, total) {
     if (run.paused && !run.stopped) {
-        $('plan-summary').textContent = `En pause après ${done}/${total} opérations`;
+        $('plan-summary').textContent = t('paused_after', done, total);
         $('apply-hint').textContent = '';
         await new Promise((resolve) => { run.resume = resolve; });
         run.resume = null;
@@ -885,7 +891,7 @@ async function applyOps(ops) {
                 stopped = true;
                 break;
             }
-            $('plan-summary').textContent = `Enregistrement en cours : ${describeOp(op)} du ${op.from} au ${op.to}`;
+            $('plan-summary').textContent = t('applying_op', describeOp(op), op.from, op.to);
             markOp(op, 'busy');
             try {
                 await callAdapter('applyPrice', op);
@@ -901,7 +907,7 @@ async function applyOps(ops) {
                 markOp(op, 'error');
                 failed = true;
                 setProgress(doneNights, totalNights, { failed: true });
-                log(`Arrêt : ${e.message}`, 'error');
+                log(t('log_stop_error', e.message), 'error');
                 break;
             }
             await new Promise((r) => setTimeout(r, BREATH_MS));
@@ -913,20 +919,18 @@ async function applyOps(ops) {
     }
     const complete = done === ops.length && !failed;
     $('plan-summary').textContent = complete
-        ? `${done} opérations enregistrées, ${doneNights} nuits au bon prix`
-        : stopped
-            ? `Enregistrement arrêté après ${done}/${ops.length} opérations`
-            : `Enregistrement interrompu après ${done}/${ops.length} opérations, voir le journal`;
-    log(`${done}/${ops.length} opérations appliquées`, complete || stopped ? 'ok' : 'error');
+        ? t('done_complete', done, doneNights)
+        : t(stopped ? 'done_stopped' : 'done_interrupted', done, ops.length);
+    log(t('log_applied', done, ops.length), complete || stopped ? 'ok' : 'error');
     $('plan').disabled = false;
-    const outcome = complete ? 'Enregistré' : stopped ? 'Arrêté' : 'Interrompu';
+    const outcome = t(complete ? 'outcome_saved' : stopped ? 'outcome_stopped' : 'outcome_interrupted');
     const remaining = opsFor(plannedDates()).reduce((sum, op) => sum + op.nights, 0);
     if (remaining) {
         setApply(true);
-        $('apply-hint').textContent = `${outcome} · ${remaining} nuits restent à appliquer, en tout ou sur une sélection`;
+        $('apply-hint').textContent = t('hint_remaining', outcome, remaining);
     }
     else {
-        setApply(false, `${outcome}, prévisualisez à nouveau pour vérifier`);
+        setApply(false, t('hint_done_verify', outcome));
     }
 }
 
@@ -942,7 +946,7 @@ for (const id of ['factor', 'rounding', 'special-days']) {
     $(id).addEventListener('change', saveSettings);
 }
 await restoreSettings();
-$('journal').addEventListener('toggle', saveSettings);
+$('show-log').addEventListener('change', () => { syncLogVisibility(); saveSettings(); });
 document.addEventListener('click', (e) => {
     const settings = $('settings');
     if (settings.open && !settings.contains(e.target)) {

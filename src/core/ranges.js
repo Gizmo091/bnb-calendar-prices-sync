@@ -1,7 +1,7 @@
 import { addDays, weekday } from './dates.js';
+import { t } from './i18n.js';
 
 export const WEEKDAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-const WEEKDAY_LABELS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /**
@@ -92,7 +92,7 @@ export function describeOp(op) {
         if (!groups.has(price)) {
             groups.set(price, []);
         }
-        groups.get(price).push(WEEKDAY_LABELS[wd]);
+        groups.get(price).push(t(`wd_short_${wd}`));
     }
     return [...groups].map(([price, days]) => `${days.join('/')} ${price}`).join(' · ');
 }

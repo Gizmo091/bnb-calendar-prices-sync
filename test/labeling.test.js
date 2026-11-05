@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import './setup.js';
 import { labelDay, ruleKey, labelYear, describeRuleKey, parseRuleKey, neighbours, dayTypeOf } from '../src/core/labeling.js';
 import { contextFor } from './helpers.js';
 

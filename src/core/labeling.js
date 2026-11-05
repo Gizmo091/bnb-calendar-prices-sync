@@ -9,10 +9,10 @@
  * retrouvent chaque année, même si leurs dates bougent.
  */
 import { eachDay, weekday, yearBounds } from './dates.js';
+import { t } from './i18n.js';
 
 /** Codes des jours de la semaine, indexés comme `weekday` (0 = dimanche). */
 export const DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-export const DAY_NAMES = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 /** Par défaut, seul le samedi a un tarif propre. */
 export const DEFAULT_SPECIAL_DAYS = [6];
 
@@ -28,27 +28,8 @@ export function dayTypeOf(iso, specialDays = DEFAULT_SPECIAL_DAYS) {
 /** Saisons sans vacances scolaires, distinguées par les vacances qui les encadrent. */
 export const GAP_SEASONS = new Set(['none', 'ferie']);
 
-const SEASON_NAMES = {
-    none: 'Hors vacances',
-    ferie: 'Jour férié',
-    noel: 'Vacances de Noël',
-    hiver: "Vacances d'hiver",
-    printemps: 'Vacances de printemps',
-    ete: "Vacances d'été",
-    toussaint: 'Vacances de la Toussaint',
-    ascension: "Pont de l'Ascension",
-};
-
-const SHORT_NAMES = {
-    noel: 'Noël',
-    hiver: 'hiver',
-    printemps: 'printemps',
-    ete: 'été',
-    toussaint: 'Toussaint',
-    ascension: 'Ascension',
-    start: 'début',
-    end: 'fin',
-};
+const SEASONS = ['none', 'ferie', 'noel', 'hiver', 'printemps', 'ete', 'toussaint', 'ascension'];
+const SHORT = ['noel', 'hiver', 'printemps', 'ete', 'toussaint', 'ascension', 'start', 'end'];
 
 /**
  * Vacances précédentes et suivantes d'une nuit, toutes zones confondues.
@@ -124,19 +105,20 @@ export function labelYear(year, ctx, options = {}) {
 
 export function describeDayType(dayType) {
     const index = DAY_CODES.indexOf(dayType);
-    return index === -1 ? 'autres jours' : DAY_NAMES[index];
+    return index === -1 ? t('other_days') : t(`day_${index}`);
 }
 
 export function describeGap(gap) {
     const [before, after] = gap.split('>');
-    return `entre ${SHORT_NAMES[before] ?? before} et ${SHORT_NAMES[after] ?? after}`;
+    const short = (name) => (SHORT.includes(name) ? t(`short_${name}`) : name);
+    return t('gap_between', short(before), short(after));
 }
 
 export function describeRuleKey(key) {
     const { season, zones, gap, dayType } = parseRuleKey(key);
-    const parts = [SEASON_NAMES[season] ?? season];
+    const parts = [SEASONS.includes(season) ? t(`season_${season}`) : season];
     if (zones.length) {
-        parts.push(`zone${zones.length > 1 ? 's' : ''} ${zones.join('+')}`);
+        parts.push(t(zones.length > 1 ? 'zone_many' : 'zone_one', zones.join('+')));
     }
     if (gap) {
         parts.push(describeGap(gap));

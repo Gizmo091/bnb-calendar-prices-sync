@@ -74,5 +74,5 @@ export function exportFileName({ site, listingId, listingName, year, extension }
         .slice(0, 60)
         .replace(/-+$/, '');
     const listing = slug || (listingId ? String(listingId).replace(/[^a-z0-9]+/gi, '-') : '');
-    return ['prix', site, listing, year].filter(Boolean).join('-') + extension;
+    return ['bnbridge', site, listing, year].filter(Boolean).join('-') + extension;
 }

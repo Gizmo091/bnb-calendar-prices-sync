@@ -1,4 +1,6 @@
-# BnB Calendar Prices Sync
+# BnBridge
+
+**Bridge your rates across platforms and years.**
 
 [![CI](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml)
 
@@ -30,7 +32,9 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
 - **Appliquer tout, ou seulement une sélection** : un clic ou un glisser sur
   la grille choisit des nuits (contour clair), et un second bouton n'enregistre
   que celles-là ; le reste peut être appliqué ensuite sans nouvelle simulation.
-- **Journal repliable**, en bas du panneau, dont l'état est mémorisé.
+- **Interface en anglais et en français**, selon la langue de Chrome ; les
+  textes vivent dans `_locales/`.
+- **Journal** en bas du panneau, à afficher ou masquer depuis les réglages.
 - **Pause et arrêt à tout moment** pendant l'enregistrement : l'opération en
   cours se termine, puis l'extension attend ou s'arrête ; une nouvelle
   simulation reprend là où elle en était.
@@ -79,13 +83,14 @@ simplifié ou à défaut son identifiant, contient du JSON :
 
 ```
 manifest.json
+_locales/     textes de l'interface, anglais (défaut) et français
 src/
   core/        logique métier, indépendante du navigateur (testée en Node)
   adapters/    lecture et écriture du calendrier de chaque site
   content/     script de contenu : charge l'adaptateur et répond aux messages du panneau
   ui/          panneau latéral : page, gabarit, styles, grille de l'année
   background.js  ouvre le panneau au clic, relaie les API publiques avec cache
-dev/preview.html  aperçu du panneau hors extension (servir le dépôt en HTTP, `?dark`, `?state=…`)
+dev/preview.html  aperçu du panneau hors extension (servir le dépôt en HTTP, `?dark`, `?lang=en`, `?state=…`)
 test/
 ```
 

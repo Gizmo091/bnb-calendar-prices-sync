@@ -14,10 +14,12 @@
 <body>
 <script type="module">
     import { renderYearGrid, priceLevels, describeDate } from '../src/ui/yearGrid.js';
-    import { eachDay, weekday } from '../src/core/index.js';
+    import { eachDay, weekday, setMessages, translateDom, t } from '../src/core/index.js';
 
-    // Paramètres : ?dark, ?state=unsupported|empty|loaded|reading|planned|applied, &overwrite
+    // Paramètres : ?dark, ?lang=fr|en, ?state=unsupported|empty|loaded|reading|planned|applied, &overwrite, &selected
     const params = new URLSearchParams(location.search);
+    const lang = params.get('lang') ?? 'fr';
+    setMessages(await (await fetch(`../_locales/${lang}/messages.json`)).json(), lang);
     const dark = params.has('dark');
     const stage = params.get('state') ?? 'applied';
     if (dark) {
@@ -28,6 +30,10 @@
         document.head.append(style);
     }
     document.body.innerHTML = await (await fetch('../src/ui/template.html')).text();
+    translateDom(document.body);
+    const [projectOption, asIsOption] = document.getElementById('mode').options;
+    projectOption.textContent = t('mode_project', 2026);
+    asIsOption.textContent = t('mode_as_is', 2026);
     const $ = (id) => document.getElementById(id);
 
     if (stage === 'unsupported') {

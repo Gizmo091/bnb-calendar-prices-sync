@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import './setup.js';
 import { toRanges, toWeekdayRanges, priceForDate, describeOp } from '../src/core/ranges.js';
 import { planUpdates, opsForDates } from '../src/core/plan.js';
 import { detectBasePrice } from '../src/core/basePrice.js';
@@ -89,9 +90,9 @@ test('toWeekdayRanges coupe quand un jour de la semaine change de prix', () => {
 
 test('exportFileName simplifie le nom de l\'annonce, ou reprend son identifiant', () => {
     const base = { site: 'airbnb', listingId: '850769363996753698', year: 2027, extension: '.bnbprices' };
-    assert.equal(exportFileName({ ...base, listingName: 'Chalet avec vue sur le Grand Bec & Courchevel' }), 'prix-airbnb-chalet-avec-vue-sur-le-grand-bec-courchevel-2027.bnbprices');
-    assert.equal(exportFileName({ ...base, listingName: null }), 'prix-airbnb-850769363996753698-2027.bnbprices');
-    assert.equal(exportFileName({ site: 'abritel', listingId: '731.2733329.2910262', listingName: '  ', year: 2027, extension: '.bnbprices' }), 'prix-abritel-731-2733329-2910262-2027.bnbprices');
+    assert.equal(exportFileName({ ...base, listingName: 'Chalet avec vue sur le Grand Bec & Courchevel' }), 'bnbridge-airbnb-chalet-avec-vue-sur-le-grand-bec-courchevel-2027.bnbprices');
+    assert.equal(exportFileName({ ...base, listingName: null }), 'bnbridge-airbnb-850769363996753698-2027.bnbprices');
+    assert.equal(exportFileName({ site: 'abritel', listingId: '731.2733329.2910262', listingName: '  ', year: 2027, extension: '.bnbprices' }), 'bnbridge-abritel-731-2733329-2910262-2027.bnbprices');
 });
 
 test('opsForDates ne garde que les nuits choisies et les regroupe à nouveau', () => {

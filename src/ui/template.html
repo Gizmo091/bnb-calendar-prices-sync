@@ -5,28 +5,32 @@
 
   <div class="body" id="body">
     <div id="unsupported" class="unsupported" hidden>
-      <p>Cet onglet n'est pas pris en charge</p>
-      <p>L'extension travaille sur le calendrier d'une annonce, sur l'un de ces sites :</p>
+      <p data-i18n="unsupported_title"></p>
+      <p data-i18n="unsupported_intro"></p>
       <ul>
-        <li><a href="https://www.airbnb.fr/multicalendar/" target="_blank" rel="noopener">Airbnb</a><span>calendrier hôte</span><span class="url">https://www.airbnb.fr/multicalendar/&lt;id de l'annonce&gt;</span></li>
-        <li><a href="https://www.abritel.fr/p/calendar/" target="_blank" rel="noopener">Abritel / Vrbo</a><span>calendrier propriétaire</span><span class="url">https://www.abritel.fr/p/calendar/&lt;id de l'annonce&gt;</span></li>
+        <li><a href="https://www.airbnb.fr/multicalendar/" target="_blank" rel="noopener">Airbnb</a><span data-i18n="unsupported_airbnb_kind"></span><span class="url" data-i18n="unsupported_airbnb_url"></span></li>
+        <li><a href="https://www.abritel.fr/p/calendar/" target="_blank" rel="noopener">Abritel / Vrbo</a><span data-i18n="unsupported_abritel_kind"></span><span class="url" data-i18n="unsupported_abritel_url"></span></li>
       </ul>
     </div>
     <div id="steps">
     <p id="notice" class="notice" hidden></p>
     <section>
-      <h2><span class="step">01</span>Lire ou importer les prix</h2>
+      <h2><span class="step">01</span><span data-i18n="step1_title"></span></h2>
       <div class="row">
-        <label class="field">Année <input id="year" type="number" min="2020" max="2100"></label>
-        <button id="read" type="button">Lire le calendrier</button>
-        <label class="file">Importer des prix <input id="import" type="file" accept=".bnbprices,.json,application/json"></label>
+        <label class="field"><span data-i18n="field_year"></span> <input id="year" type="number" min="2020" max="2100"></label>
+        <button id="read" type="button" data-i18n="btn_read"></button>
+        <label class="file"><span data-i18n="btn_import"></span><input id="import" type="file" accept=".bnbprices,.json,application/json"></label>
       </div>
+      <p class="hint" data-i18n="import_hint"></p>
       <div id="read-result" class="card" hidden>
         <div class="card-head">
           <p id="read-summary" class="hint"></p>
-          <button id="export" type="button" class="icon" disabled title="Exporter les prix dans un fichier" aria-label="Exporter les prix dans un fichier">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 19h14"/></svg>
-          </button>
+          <span class="help">
+            <button id="export" type="button" class="icon" disabled data-i18n-aria-label="export_tip" aria-describedby="export-help">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 19h14"/></svg>
+            </button>
+            <span id="export-help" role="tooltip" class="tip" data-i18n="export_tip"></span>
+          </span>
         </div>
         <div id="read-grid" class="year-grid" hidden></div>
         <p id="read-notice" class="notice" hidden></p>
@@ -36,13 +40,13 @@
     <div id="after-read" class="locked" inert>
     <section>
       <div class="row inline-step">
-        <h2><span class="step">02</span><label for="base-price">Prix de base</label></h2>
+        <h2><span class="step">02</span><label for="base-price" data-i18n="step2_title"></label></h2>
         <input id="base-price" type="number" min="0" step="1">
         <span class="help">
-          <button type="button" class="info" aria-label="À quoi sert le prix de base" aria-describedby="base-help">
+          <button type="button" class="info" data-i18n-aria-label="base_help_aria" aria-describedby="base-help">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
           </button>
-          <span id="base-help" role="tooltip" class="tip">Le tarif par défaut du site, celui des nuits que vous n'avez pas touchées. Lors de l'application, une nuit à ce prix est modifiée ; une nuit à un autre prix est considérée comme personnalisée et laissée telle quelle. Il sert aussi aux périodes sans règle dans la projection.</span>
+          <span id="base-help" role="tooltip" class="tip" data-i18n="base_help_tip"></span>
         </span>
         <span id="base-hint" class="hint"></span>
       </div>
@@ -50,70 +54,74 @@
 
     <section>
       <div class="section-head">
-        <h2><span class="step">03</span>Appliquer le tarif</h2>
+        <h2><span class="step">03</span><span data-i18n="step3_title"></span></h2>
         <details class="settings" id="settings">
-          <summary class="icon-summary" title="Réglages" aria-label="Réglages">
+          <summary class="icon-summary" data-i18n-title="settings_title" data-i18n-aria-label="settings_title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
           </summary>
           <div class="popover">
-            <label class="field">Coefficient d'augmentation <input id="factor" type="text" inputmode="decimal" value="1" placeholder="1,05"></label>
-            <label class="field">Arrondi
+            <label class="field"><span data-i18n="field_factor"></span> <input id="factor" type="text" inputmode="decimal" value="1" data-i18n-placeholder="factor_placeholder"></label>
+            <label class="field"><span data-i18n="field_rounding"></span>
               <select id="rounding">
-                <option value="1">à l'unité</option>
-                <option value="10">à la dizaine</option>
+                <option value="1" data-i18n="rounding_unit"></option>
+                <option value="10" data-i18n="rounding_ten"></option>
               </select>
             </label>
             <div class="field-group">
-              <span class="field-label">Jours à tarif propre</span>
+              <span class="field-label" data-i18n="special_days_label"></span>
               <div class="days" id="special-days">
-                <label class="check"><input type="checkbox" value="1"> lun</label>
-                <label class="check"><input type="checkbox" value="2"> mar</label>
-                <label class="check"><input type="checkbox" value="3"> mer</label>
-                <label class="check"><input type="checkbox" value="4"> jeu</label>
-                <label class="check"><input type="checkbox" value="5"> ven</label>
-                <label class="check"><input type="checkbox" value="6" checked> sam</label>
-                <label class="check"><input type="checkbox" value="0"> dim</label>
+                <label class="check"><input type="checkbox" value="1"> <span data-i18n="wd_short_1"></span></label>
+                <label class="check"><input type="checkbox" value="2"> <span data-i18n="wd_short_2"></span></label>
+                <label class="check"><input type="checkbox" value="3"> <span data-i18n="wd_short_3"></span></label>
+                <label class="check"><input type="checkbox" value="4"> <span data-i18n="wd_short_4"></span></label>
+                <label class="check"><input type="checkbox" value="5"> <span data-i18n="wd_short_5"></span></label>
+                <label class="check"><input type="checkbox" value="6" checked> <span data-i18n="wd_short_6"></span></label>
+                <label class="check"><input type="checkbox" value="0"> <span data-i18n="wd_short_0"></span></label>
               </div>
-              <p class="hint">Les jours cochés ont leur propre règle de prix par période ; les autres partagent la même.</p>
+              <p class="hint" data-i18n="special_days_hint"></p>
+            </div>
+            <div class="field-group">
+              <span class="field-label" data-i18n="display_label"></span>
+              <label class="check"><input id="show-log" type="checkbox" checked> <span data-i18n="show_log_label"></span></label>
             </div>
           </div>
         </details>
       </div>
       <div class="row">
         <select id="mode">
-          <option value="project">Reporter les tarifs sur une autre année</option>
-          <option value="as-is">Appliquer les tarifs à la même année</option>
+          <option value="project"></option>
+          <option value="as-is"></option>
         </select>
-        <label class="field" id="target-year-field">Vers <input id="target-year" type="number" min="2020" max="2100"></label>
+        <label class="field" id="target-year-field"><span data-i18n="field_target"></span> <input id="target-year" type="number" min="2020" max="2100"></label>
       </div>
       <div class="row">
-        <label class="check"><input id="overwrite" type="checkbox"> Écraser aussi les prix personnalisés</label>
+        <label class="check"><input id="overwrite" type="checkbox"> <span data-i18n="overwrite_label"></span></label>
       </div>
       <div class="row">
-        <button id="plan" type="button" disabled>Prévisualiser les tarifs appliqués</button>
+        <button id="plan" type="button" disabled data-i18n="btn_plan"></button>
       </div>
       <p id="plan-summary" class="hint"></p>
       <div id="plan-grid" class="year-grid" hidden></div>
       <details id="skipped-details" hidden>
-        <summary>Nuits ignorées</summary>
+        <summary data-i18n="skipped_title"></summary>
         <ul id="skipped-list"></ul>
       </details>
       <details id="rules-details" hidden>
-        <summary>Règles déduites de l'année source</summary>
-        <table id="rules-table"><thead><tr><th>Période</th><th class="num">Prix</th><th class="num">Nuits</th><th class="num">Cohérence
+        <summary data-i18n="rules_title"></summary>
+        <table id="rules-table"><thead><tr><th data-i18n="th_period"></th><th class="num" data-i18n="th_price"></th><th class="num" data-i18n="th_nights"></th><th class="num"><span data-i18n="th_share"></span>
           <span class="help">
-            <button type="button" class="info" aria-label="Que mesure la cohérence" aria-describedby="share-help">
+            <button type="button" class="info" data-i18n-aria-label="share_help_aria" aria-describedby="share-help">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
             </button>
-            <span id="share-help" role="tooltip" class="tip">Part des nuits de la période qui étaient au prix retenu. 100 % : toutes les nuits avaient ce prix. Moins : les prix variaient dans la période et le plus fréquent a été gardé.</span>
+            <span id="share-help" role="tooltip" class="tip" data-i18n="share_help_tip"></span>
           </span>
         </th></tr></thead><tbody></tbody></table>
       </details>
       <div class="row apply-row">
-        <button id="apply" type="button" disabled class="primary">Appliquer tous les tarifs</button>
-        <button id="apply-selection" type="button" disabled>Appliquer à la sélection</button>
-        <button id="pause" type="button" hidden>Mettre en pause</button>
-        <button id="stop" type="button" hidden>Arrêter</button>
+        <button id="apply" type="button" disabled class="primary" data-i18n="btn_apply"></button>
+        <button id="apply-selection" type="button" disabled data-i18n="btn_apply_selection"></button>
+        <button id="pause" type="button" hidden data-i18n="btn_pause"></button>
+        <button id="stop" type="button" hidden data-i18n="btn_stop"></button>
       </div>
       <div id="progress" class="progress" hidden role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="track"><i></i></div>
@@ -124,11 +132,9 @@
     </div>
 
     </div>
-    <section>
-      <details id="journal" class="journal" open>
-        <summary><h2>Journal</h2></summary>
-        <pre id="log"></pre>
-      </details>
+    <section id="journal">
+      <h2 data-i18n="journal_title"></h2>
+      <pre id="log" data-i18n-empty="log_empty"></pre>
     </section>
   </div>
 </div>

@@ -1,13 +1,13 @@
 {
-  "name": "bnb-calendar-prices-sync",
-  "version": "0.1.0",
-  "description": "Extension navigateur : export, import et report annuel des prix du calendrier Airbnb / Abritel",
+  "name": "bnbridge",
+  "version": "0.2.0",
+  "description": "BnBridge, bridge your rates across platforms and years: export, import and carry over Airbnb / Abritel calendar prices",
   "type": "module",
   "private": true,
   "scripts": {
     "test": "node --test",
     "check": "for f in $(find src dev -name \"*.js\"); do node --check \"$f\" || exit 1; done",
-    "zip": "mkdir -p dist && rm -f dist/extension.zip && zip -r dist/extension.zip manifest.json src -x '*.DS_Store'"
+    "zip": "mkdir -p dist && rm -f dist/extension.zip && zip -r dist/extension.zip manifest.json _locales src -x '*.DS_Store'"
   },
   "engines": {
     "node": ">=20"

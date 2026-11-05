@@ -1,4 +1,5 @@
 /** Utilitaires partagés par les adaptateurs : attente d'éléments et temporisation. */
+import { t } from '../core/i18n.js';
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -11,7 +12,7 @@ export async function waitFor(selector, { root = document, timeout = 10000, inte
         }
         await sleep(interval);
     }
-    throw new Error(`Élément introuvable : ${selector}`);
+    throw new Error(t('err_element_missing', selector));
 }
 
 /** Saisie dans un champ contrôlé par React : setter natif puis événements. */
@@ -47,5 +48,5 @@ export function parsePrice(text) {
 }
 
 export function notCalibrated(site, feature) {
-    return new Error(`Adaptateur ${site} : « ${feature} » n'est pas encore calibré sur l'interface du site.`);
+    return new Error(t('err_uncalibrated', site, feature));
 }

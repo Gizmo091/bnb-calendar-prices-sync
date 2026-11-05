@@ -24,6 +24,7 @@
  *   sélectionné.
  */
 import { parsePrice, priceInText, sleep, waitFor } from './common.js';
+import { t } from '../core/i18n.js';
 import { yearOf } from '../core/dates.js';
 import { priceForDate } from '../core/ranges.js';
 
@@ -121,7 +122,7 @@ async function closeRail() {
         await sleep(600);
     }
     if (selectedLabels().length || document.querySelector(SEL.rateInput)) {
-        throw new Error('Impossible de fermer le panneau de droite.');
+        throw new Error(t('err_close_rail'));
     }
 }
 
@@ -137,7 +138,7 @@ async function ensureYearView(year) {
     if (document.querySelectorAll(SEL.tables).length < 12) {
         const tab = findByText('a, button', /^Année$/);
         if (!tab) {
-            throw new Error('Onglet « Année » introuvable.');
+            throw new Error(t('err_year_tab'));
         }
         tab.click();
         await sleep(1200);
@@ -145,13 +146,13 @@ async function ensureYearView(year) {
     if (!yearShown()) {
         const selector = document.querySelector(SEL.yearSelector);
         if (!selector) {
-            throw new Error('Sélecteur d\'année introuvable.');
+            throw new Error(t('err_year_select'));
         }
         realClick(selector);
         const item = await waitFor(SEL.yearItem(year), { timeout: 3000 }).catch(() => null);
         if (!item) {
             document.body.click();
-            throw new Error(`L'année ${year} n'est pas proposée par le calendrier Abritel.`);
+            throw new Error(t('err_year_unavailable', year));
         }
         realClick(item);
         for (let i = 0; i < 30 && !yearShown(); i++) {
@@ -159,7 +160,7 @@ async function ensureYearView(year) {
         }
     }
     if (!yearShown()) {
-        throw new Error(`La vue Année ${year} ne s'est pas affichée.`);
+        throw new Error(t('err_year_view', year));
     }
 }
 
@@ -258,14 +259,14 @@ export default {
         const { from, to, byWeekday } = op;
         const price = priceForDate(op, from);
         if (yearOf(from) !== yearOf(to)) {
-            throw new Error(`La plage ${from} → ${to} chevauche deux années : à découper.`);
+            throw new Error(t('err_range_two_years', from, to));
         }
         await closeRail();
         await ensureYearView(yearOf(from));
 
         const first = cellFor(from);
         if (!first) {
-            throw new Error(`Nuit ${from} introuvable dans le calendrier.`);
+            throw new Error(t('err_night_missing', from));
         }
         realClick(first.querySelector('[data-automation-id]') ?? first);
         await sleep(700);
@@ -273,7 +274,7 @@ export default {
             const last = cellFor(to);
             if (!last) {
                 await closeRail();
-                throw new Error(`Nuit ${to} introuvable dans le calendrier.`);
+                throw new Error(t('err_night_missing', to));
             }
             realClick(last.querySelector('[data-automation-id]') ?? last);
             await sleep(900);
@@ -283,19 +284,19 @@ export default {
         const okEnd = to === from || selected.some((l) => dateOfLabel(l) === to && /checkout/.test(l));
         if (!okStart || !okEnd) {
             await closeRail();
-            throw new Error(`Sélection inattendue pour ${from} → ${to} : ${selected.join(' / ') || 'rien'}.`);
+            throw new Error(t('err_selection_abritel', from, to, selected.join(' / ') || t('word_nothing')));
         }
 
         const rates = findByText('a, button', /Tarifs et réductions/);
         if (!rates) {
             await closeRail();
-            throw new Error('Entrée « Tarifs et réductions » introuvable dans le panneau.');
+            throw new Error(t('err_rates_entry'));
         }
         rates.click();
         const input = await waitFor(SEL.rateInput, { timeout: 6000 }).catch(() => null);
         if (!input) {
             await closeRail();
-            throw new Error('Champ « Montant par nuit » introuvable.');
+            throw new Error(t('err_amount_field'));
         }
         // Quand la sélection mélange plusieurs prix, le formulaire s'ouvre en
         // mode « par nuit de la semaine » et ignore le champ principal :
@@ -310,14 +311,14 @@ export default {
         }
         if (Boolean(document.querySelector(SEL.customizeMode)?.checked) !== wantCustomize) {
             await closeRail();
-            throw new Error(`Impossible de ${wantCustomize ? 'activer' : 'désactiver'} le mode « tarifs par nuit de la semaine ».`);
+            throw new Error(t(wantCustomize ? 'err_customize_on' : 'err_customize_off'));
         }
         if (byWeekday) {
             for (const [day, dayPrice] of Object.entries(byWeekday)) {
                 const field = document.querySelector(SEL.weekdayInput(day));
                 if (!field) {
                     await closeRail();
-                    throw new Error(`Champ du tarif « ${day} » introuvable.`);
+                    throw new Error(t('err_weekday_field', day));
                 }
                 setRateValue(field, dayPrice);
             }
@@ -329,7 +330,7 @@ export default {
         const submit = input.closest('form')?.querySelector('button[type="submit"]') ?? findByText('button', /^Enregistrer$/);
         if (!submit || submit.disabled) {
             await closeRail();
-            throw new Error(submit ? 'Le bouton Enregistrer reste désactivé (prix identique ?).' : 'Bouton Enregistrer introuvable.');
+            throw new Error(t(submit ? 'err_submit_disabled' : 'err_submit_missing'));
         }
         // Après Enregistrer, Abritel garde le formulaire ouvert : c'est la
         // cellule du calendrier qui confirme la prise en compte (en général
@@ -369,8 +370,8 @@ export default {
         if (!ok) {
             const shown = cellFor(from) ? parseCell(cellFor(from))?.price : null;
             throw new Error(lastError
-                ? `Abritel a refusé l'enregistrement de ${from} → ${to} après ${SAVE_ATTEMPTS} essais : « ${lastError} »`
-                : `Le calendrier affiche ${shown ?? '?'} € pour ${from} au lieu de ${price} € après Enregistrer.`);
+                ? t('err_abritel_refused', from, to, SAVE_ATTEMPTS, lastError)
+                : t('err_price_mismatch_after_save', shown ?? '?', from, price));
         }
         return { from, to, price };
     },

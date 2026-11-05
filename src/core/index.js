@@ -6,3 +6,4 @@ export * from './ranges.js';
 export * from './basePrice.js';
 export * from './plan.js';
 export * from './schema.js';
+export * from './i18n.js';

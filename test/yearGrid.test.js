@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import './setup.js';
 import { priceLevels, describeDate } from '../src/ui/yearGrid.js';
 
 test('priceLevels classe les prix par rang, du plus bas au plus haut', () => {
