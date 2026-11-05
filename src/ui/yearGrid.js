@@ -4,7 +4,7 @@
  * prix (teinte de l'accent) ou l'état d'une nuit dans le plan.
  *
  * `cells` associe une date ISO à `{ level?, state?, flags?, title? }` :
- * - `level` entre 0 et 1, quantifié en cinq paliers du froid au chaud ;
+ * - `level` entre 0 et 1, quantifié en cinq paliers du jaune au rouge ;
  * - `state` parmi ok, diff, custom, pending, next, busy, error, unknown : la couleur de fond ;
  * - `flags` parmi reserved, blocked, past : des marques qui se superposent
  *   à la couleur (hachures, atténuation) sans la remplacer ;
@@ -77,7 +77,7 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
         for (const item of legend) {
             const li = document.createElement('li');
             if (item.scale) {
-                // Échelle de prix : les cinq paliers, du froid (plus bas) au chaud (plus haut).
+                // Échelle de prix : les cinq paliers, du jaune (plus bas) au rouge (plus haut).
                 const [min, max] = item.scale;
                 const strip = document.createElement('span');
                 strip.className = 'scale';

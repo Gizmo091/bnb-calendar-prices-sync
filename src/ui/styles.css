@@ -2,7 +2,7 @@
  * Panneau latéral de Chrome, à côté des calendriers Airbnb et Abritel.
  * Chrome graphite et silencieux : une seule couleur d'accent, réservée à
  * l'action d'application et à l'état des nuits du plan. Les prix lus ont
- * leur propre échelle, du froid au chaud, dans la grille de l'année.
+ * leur propre échelle, du jaune au rouge, dans la grille de l'année.
  */
 :root {
     --surface: #ffffff;
@@ -18,12 +18,12 @@
     --on-accent: #ffffff;
     --positive: #16a34a;
     --negative: #dc2626;
-    /* Échelle des prix, du froid (moins cher) au chaud (plus cher). */
-    --heat-1: #a9c9e6;
-    --heat-2: #8fc3c0;
-    --heat-3: #e2cf7a;
-    --heat-4: #ec9d5a;
-    --heat-5: #d8513f;
+    /* Échelle des prix, du jaune pâle (moins cher) au rouge (plus cher). */
+    --heat-1: #f4e4a6;
+    --heat-2: #f1c76a;
+    --heat-3: #eea04a;
+    --heat-4: #e3703c;
+    --heat-5: #cf3f33;
     --shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 8px 24px rgba(0, 0, 0, .08);
     --ease: cubic-bezier(.22, 1, .36, 1);
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -44,11 +44,11 @@
         --on-accent: #0f0f10;
         --positive: #4cc38a;
         --negative: #e5484d;
-        --heat-1: #3f6f98;
-        --heat-2: #3f8f8a;
-        --heat-3: #b39a3a;
-        --heat-4: #c9772f;
-        --heat-5: #d14a3a;
+        --heat-1: #766d3e;
+        --heat-2: #b08a2e;
+        --heat-3: #c7732a;
+        --heat-4: #cf5a2e;
+        --heat-5: #d1403a;
         --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .4);
     }
 }
