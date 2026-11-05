@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" width="420" height="96">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3568d8"/>
+      <stop offset="1" stop-color="#1e3f93"/>
+    </linearGradient>
+    <linearGradient id="rates" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f4c04a"/>
+      <stop offset=".55" stop-color="#ea7a3a"/>
+      <stop offset="1" stop-color="#d23e36"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(0 8) scale(.625)">
+    <rect width="128" height="128" rx="28" fill="url(#sky)"/>
+    <rect x="34" y="82" width="60" height="14" rx="7" fill="url(#rates)"/>
+    <path d="M22 100 V84 C22 56 40 36 64 36 S106 56 106 84 V100" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="98" y="52" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="40" font-weight="700" fill="#1e3f93" letter-spacing="-.5">BnBridge</text>
+  <text x="99" y="78" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" fill="#525252">Bridge your rates across platforms and years</text>
+</svg>

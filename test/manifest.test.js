@@ -9,6 +9,19 @@ const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8')
 
 const exists = (path) => existsSync(resolve(root, path));
 
+/** Au moins un fichier répond au motif, où `*` vaut pour un segment ou un nom. */
+function anyMatch(pattern) {
+    let candidates = [root];
+    for (const part of pattern.split('/')) {
+        const escaped = part.replace(/[.+^$(){}|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+        const re = new RegExp(`^${escaped}$`);
+        candidates = candidates.flatMap((dir) => (existsSync(dir) ? readdirSync(dir, { withFileTypes: true }) : [])
+            .filter((entry) => re.test(entry.name))
+            .map((entry) => resolve(dir, entry.name)));
+    }
+    return candidates.length > 0;
+}
+
 test('le manifeste est en version 3 et déclare le panneau latéral', () => {
     assert.equal(manifest.manifest_version, 3);
     assert.ok(manifest.permissions.includes('sidePanel'));
@@ -23,8 +36,7 @@ test('chaque fichier référencé par le manifeste existe', () => {
         assert.ok(exists(script), script);
     }
     for (const pattern of manifest.web_accessible_resources.flatMap((r) => r.resources)) {
-        const dir = pattern.replace(/\/\*\.js$/, '');
-        assert.ok(exists(dir) && readdirSync(resolve(root, dir)).some((f) => f.endsWith('.js')), pattern);
+        assert.ok(anyMatch(pattern), pattern);
     }
 });
 

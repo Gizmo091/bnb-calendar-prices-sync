@@ -1,10 +1,16 @@
 /*
  * Panneau latéral de Chrome, à côté des calendriers Airbnb et Abritel.
- * Chrome graphite et silencieux : une seule couleur d'accent, réservée à
- * l'action d'application et à l'état des nuits du plan. Les prix lus ont
- * leur propre échelle, du jaune au rouge, dans la grille de l'année.
+ * Chrome graphite et silencieux, relevé par la couleur de marque, le bleu
+ * du pont : titres, bouton d'application, progression, préférences. Les
+ * grilles gardent leur propre langage : vert pour une nuit au bon prix,
+ * une échelle du jaune au rouge pour les prix, les mêmes que sur le logo.
  */
 :root {
+    /* Marque : le bleu du pont, et sa version profonde pour le texte et le survol. */
+    --brand: #2f5fcf;
+    --brand-ink: #1e3f93;
+    --brand-soft: rgba(47, 95, 207, .12);
+    --on-brand: #ffffff;
     --surface: #ffffff;
     --raised: #f4f4f5;
     --sunken: #fafafa;
@@ -44,6 +50,10 @@
         --fg-3: #85858b;
         --hairline: rgba(237, 237, 237, .08);
         --hairline-strong: rgba(237, 237, 237, .16);
+        --brand: #7f9ff6;
+        --brand-ink: #a9bdff;
+        --brand-soft: rgba(127, 159, 246, .16);
+        --on-brand: #0f1424;
         --accent: #4cb07e;
         --accent-ink: #6cc495;
         --on-accent: #0f0f10;
@@ -92,6 +102,7 @@ header {
     user-select: none;
     flex: none;
 }
+.logo { width: 22px; height: 22px; flex: none; display: block; }
 .meta { flex: 1; min-width: 0; color: var(--fg-3); font: 12px/16px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .body { padding: 0 16px 16px; }
@@ -100,10 +111,11 @@ section:has(+ section[hidden]) { border-bottom: 0; padding-bottom: 0; }
 
 section { padding: 16px 0 20px; border-bottom: 1px solid var(--hairline); }
 section:last-child { border-bottom: 0; padding-bottom: 0; }
-h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size: 13px; font-weight: 500; line-height: 20px; }
+h2 { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 14px; font-weight: 600; line-height: 20px; letter-spacing: -.01em; }
 .inline-step h2 { margin: 0; }
 .inline-step .help { margin-left: -4px; }
-.step { font: 12px/16px var(--mono); color: var(--fg-3); font-variant-numeric: tabular-nums; }
+/* Numéro d'étape : « 1 – », dans la couleur de marque. */
+.step { color: var(--brand-ink); font-variant-numeric: tabular-nums; }
 
 .unsupported { padding: 16px 0; }
 .unsupported p { margin: 0 0 12px; }
@@ -111,7 +123,7 @@ h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size
 .unsupported li { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 8px; }
 .unsupported li span { color: var(--fg-3); font-size: 12px; line-height: 16px; }
 .unsupported .url { font-family: var(--mono); word-break: break-all; }
-.unsupported a { color: var(--accent-ink); text-decoration: none; font-weight: 500; }
+.unsupported a { color: var(--brand-ink); text-decoration: none; font-weight: 500; }
 .unsupported a:hover { text-decoration: underline; }
 
 .card { margin-top: 12px; padding: 12px; border: 1px solid var(--hairline); border-radius: 12px; }
@@ -128,7 +140,7 @@ button.icon svg { width: 16px; height: 16px; }
 .apply-row { margin-top: 16px; }
 .progress { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .progress .track { flex: 1; height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; }
-.progress .track i { display: block; height: 100%; width: var(--w, 0%); border-radius: 3px; background: var(--accent); transition: width 300ms var(--ease); }
+.progress .track i { display: block; height: 100%; width: var(--w, 0%); border-radius: 3px; background: var(--brand); transition: width 300ms var(--ease); }
 .progress.failed .track i { background: var(--negative); }
 .progress .count { font: 12px/16px var(--mono); color: var(--fg-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
@@ -136,13 +148,14 @@ button.icon svg { width: 16px; height: 16px; }
 
 .section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .section-head h2 { flex: 1; margin: 0; }
-details.settings { position: relative; margin: 0; }
+details.settings { position: relative; margin: 0; flex: none; }
+header .icon-summary { margin: 0 -4px 0 0; }
 .icon-summary {
     display: inline-flex; align-items: center; justify-content: center;
     width: 28px; height: 28px; margin: -4px 0; border-radius: 8px; color: var(--fg-3); cursor: pointer;
 }
 .icon-summary::before { content: none; }
-.icon-summary:hover, details[open] > .icon-summary { background: var(--raised); color: var(--fg); }
+.icon-summary:hover, details[open] > .icon-summary { background: var(--brand-soft); color: var(--brand-ink); }
 .icon-summary svg { width: 16px; height: 16px; }
 .popover {
     position: absolute; top: 100%; right: 0; z-index: 2;
@@ -221,7 +234,7 @@ input[type="number"], input[type="text"] {
     transition: border-color 160ms var(--ease);
 }
 input[type="number"]:hover, input[type="text"]:hover { border-color: var(--fg-3); }
-input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
 select {
     max-width: 100%;
     height: 32px;
@@ -253,12 +266,12 @@ button, label.file {
 button:hover:not(:disabled), label.file:hover { border-color: var(--fg-3); }
 button:active:not(:disabled) { transform: scale(.98); }
 button:disabled { opacity: .45; cursor: not-allowed; }
-button.primary:not(:disabled) { background: var(--accent); border-color: transparent; color: var(--on-accent); }
-button.primary:hover:not(:disabled) { background: var(--accent-ink); }
+button.primary:not(:disabled) { background: var(--brand); border-color: transparent; color: var(--on-brand); }
+button.primary:hover:not(:disabled) { background: var(--brand-ink); }
 label.file input { display: none; }
 
 :is(button, input, select, summary) { outline: none; }
-:is(button, input, select, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:is(button, input, select, summary):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 /* ---------- Grille de l'année ---------- */
 

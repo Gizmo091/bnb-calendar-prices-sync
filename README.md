@@ -1,6 +1,10 @@
+<img src="assets/logo.svg" alt="" width="64" height="64" align="left">
+
 # BnBridge
 
 **Bridge your rates across platforms and years.**
+
+<br clear="left">
 
 [![CI](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml)
 
@@ -32,9 +36,10 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
 - **Appliquer tout, ou seulement une sélection** : un clic ou un glisser sur
   la grille choisit des nuits (contour clair), et un second bouton n'enregistre
   que celles-là ; le reste peut être appliqué ensuite sans nouvelle simulation.
-- **Interface en anglais et en français**, selon la langue de Chrome ; les
-  textes vivent dans `_locales/`.
-- **Journal** en bas du panneau, à afficher ou masquer depuis les réglages.
+- **Interface en anglais et en français**, selon la langue de Chrome ou celle
+  choisie dans les préférences ; les textes vivent dans `_locales/`.
+- **Journal** en bas du panneau, à afficher ou masquer depuis les préférences,
+  l'engrenage de l'en-tête, où se choisit aussi la langue.
 - **Pause et arrêt à tout moment** pendant l'enregistrement : l'opération en
   cours se termine, puis l'extension attend ou s'arrête ; une nouvelle
   simulation reprend là où elle en était.
@@ -43,7 +48,9 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
   arrondi optionnels pour ajuster le prix.
 
 Les vacances scolaires viennent de l'open data de l'Éducation nationale
-(`fr-en-calendrier-scolaire`), les jours fériés de `calendrier.api.gouv.fr`.
+(`fr-en-calendrier-scolaire`), les jours fériés de `calendrier.api.gouv.fr` ;
+ces deux API acceptent les requêtes de toute origine, l'extension ne demande
+donc aucune permission sur elles.
 
 ## Installation (mode développeur)
 
@@ -79,11 +86,29 @@ simplifié ou à défaut son identifiant, contient du JSON :
 }
 ```
 
+## Identité visuelle
+
+Le logo est un pont blanc au-dessus de la ligne des tarifs, du jaune au rouge,
+les couleurs mêmes de la grille des prix. Il vit dans `assets/logo.svg`, avec
+un mot-symbole (`assets/wordmark.svg`) et les icônes de l'extension
+(`assets/icons/`, générées par `rsvg-convert` depuis le logo).
+
+| Rôle | Clair | Sombre |
+| --- | --- | --- |
+| Bleu du pont, marque (boutons, numéros d'étape, progression) | `#2f5fcf`, encre `#1e3f93` | `#7f9ff6`, encre `#a9bdff` |
+| Vert, nuit au bon prix (grilles seulement) | `#2f6f4e` | `#4cb07e` |
+| Échelle des prix, du moins cher au plus cher | `#f4e4a6` → `#cf3f33` | `#766d3e` → `#d1403a` |
+| Graphite, texte et surfaces | `#171717` sur `#ffffff` | `#ededed` sur `#19191b` |
+
+Le chrome du panneau reste neutre ; la marque n'apparaît que sur ce qui agit
+(bouton principal, numéros d'étape, préférences), jamais dans les grilles.
+
 ## Structure
 
 ```
 manifest.json
 _locales/     textes de l'interface, anglais (défaut) et français
+assets/       logo, mot-symbole et icônes
 src/
   core/        logique métier, indépendante du navigateur (testée en Node)
   adapters/    lecture et écriture du calendrier de chaque site
@@ -94,8 +119,8 @@ dev/preview.html  aperçu du panneau hors extension (servir le dépôt en HTTP, 
 test/
 ```
 
-Le panneau garde un chrome neutre ; la seule couleur sert au bouton « Appliquer » et à la
-grille de l'année, qui montre les prix chargés puis l'état de chaque nuit du plan. La mise en
+Le panneau garde un chrome neutre ; la couleur de marque sert aux actions, et la
+grille de l'année montre les prix chargés puis l'état de chaque nuit du plan. La mise en
 forme suit la méthode [unslop](https://github.com/heydamir/unslop) de Damir Sokolovsky (CC BY 4.0).
 
 ## État

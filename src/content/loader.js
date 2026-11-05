@@ -5,6 +5,8 @@
  */
 (async () => {
     const { pickAdapter } = await import(chrome.runtime.getURL('src/adapters/index.js'));
+    const { useLanguage } = await import(chrome.runtime.getURL('src/core/i18n.js'));
+    let language = 'auto';
     const adapter = pickAdapter(location.hostname);
     if (!adapter) {
         return;
@@ -28,6 +30,10 @@
         }
         (async () => {
             try {
+                if (msg.lang && msg.lang !== language) {
+                    language = msg.lang;
+                    await useLanguage(language);
+                }
                 if (msg.method === 'info') {
                     sendResponse({ ok: true, result: await describe() });
                 }

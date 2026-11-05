@@ -4,6 +4,12 @@
   "version": "0.2.0",
   "description": "__MSG_ext_description__",
   "default_locale": "en",
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
   "permissions": [
     "storage",
     "sidePanel"
@@ -12,16 +18,20 @@
     "https://*.airbnb.fr/*",
     "https://*.airbnb.com/*",
     "https://*.abritel.fr/*",
-    "https://*.vrbo.com/*",
-    "https://data.education.gouv.fr/*",
-    "https://calendrier.api.gouv.fr/*"
+    "https://*.vrbo.com/*"
   ],
   "background": {
     "service_worker": "src/background.js",
     "type": "module"
   },
   "action": {
-    "default_title": "__MSG_ext_name__"
+    "default_title": "__MSG_ext_name__",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128.png"
+    }
   },
   "side_panel": {
     "default_path": "src/ui/panel.html"
@@ -44,7 +54,8 @@
     {
       "resources": [
         "src/adapters/*.js",
-        "src/core/*.js"
+        "src/core/*.js",
+        "_locales/*/messages.json"
       ],
       "matches": [
         "https://*.airbnb.fr/*",

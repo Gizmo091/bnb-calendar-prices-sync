@@ -1,8 +1,9 @@
 /**
- * Textes de l'interface. Dans l'extension, Chrome fournit la langue et les
- * messages (`_locales/<langue>/messages.json`) ; ailleurs (aperçu, tests),
- * un catalogue chargé par `setMessages` prend le relais. Les messages
- * utilisent `$1`, `$2`… pour leurs valeurs.
+ * Textes de l'interface. Un catalogue chargé par `setMessages` ou
+ * `useLanguage` (langue choisie dans les réglages, aperçu, tests) prime ;
+ * sinon Chrome fournit la langue et les messages
+ * (`_locales/<langue>/messages.json`). Les messages utilisent `$1`, `$2`…
+ * pour leurs valeurs.
  */
 let messages = null;
 let forcedLocale = null;
@@ -27,17 +28,32 @@ export function currentLocale() {
 
 export function t(key, ...subs) {
     const values = subs.map((v) => String(v));
+    const entry = messages?.[key];
+    if (entry) {
+        return entry.message.replace(/\$(\d)/g, (_, n) => values[Number(n) - 1] ?? '');
+    }
     if (hasChrome()) {
         const text = chrome.i18n.getMessage(key, values);
         if (text) {
             return text;
         }
     }
-    const entry = messages?.[key];
-    if (!entry) {
-        return key;
+    return key;
+}
+
+/**
+ * Charge le catalogue d'une langue (« en », « fr ») et l'impose ; `auto` ou
+ * vide rend la main à la langue de Chrome. Hors extension, le catalogue est
+ * lu à côté des sources.
+ */
+export async function useLanguage(lang) {
+    if (!lang || lang === 'auto') {
+        setMessages(null, null);
+        return;
     }
-    return entry.message.replace(/\$(\d)/g, (_, n) => values[Number(n) - 1] ?? '');
+    const path = `_locales/${lang}/messages.json`;
+    const url = globalThis.chrome?.runtime?.getURL ? chrome.runtime.getURL(path) : new URL(`../../${path}`, import.meta.url);
+    setMessages(await (await fetch(url)).json(), lang);
 }
 
 /**

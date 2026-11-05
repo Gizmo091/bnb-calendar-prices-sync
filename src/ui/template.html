@@ -1,6 +1,22 @@
 <div class="panel" id="panel">
   <header>
+    <svg class="logo" viewBox="0 0 128 128" aria-hidden="true"><defs><linearGradient id="logo-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3568d8"/><stop offset="1" stop-color="#1e3f93"/></linearGradient><linearGradient id="logo-rates" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4c04a"/><stop offset=".55" stop-color="#ea7a3a"/><stop offset="1" stop-color="#d23e36"/></linearGradient></defs><rect width="128" height="128" rx="28" fill="url(#logo-sky)"/><rect x="34" y="82" width="60" height="14" rx="7" fill="url(#logo-rates)"/><path d="M22 100 V84 C22 56 40 36 64 36 S106 56 106 84 V100" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span id="site-info" class="meta"></span>
+    <details class="settings" id="preferences">
+      <summary class="icon-summary" data-i18n-title="prefs_title" data-i18n-aria-label="prefs_title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </summary>
+      <div class="popover">
+        <label class="field"><span data-i18n="field_language"></span>
+          <select id="language">
+            <option value="auto" data-i18n="lang_auto"></option>
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </label>
+        <label class="check"><input id="show-log" type="checkbox" checked> <span data-i18n="show_log_label"></span></label>
+      </div>
+    </details>
   </header>
 
   <div class="body" id="body">
@@ -15,7 +31,7 @@
     <div id="steps">
     <p id="notice" class="notice" hidden></p>
     <section>
-      <h2><span class="step">01</span><span data-i18n="step1_title"></span></h2>
+      <h2><span class="step">1 –</span><span data-i18n="step1_title"></span></h2>
       <div class="row">
         <label class="field"><span data-i18n="field_year"></span> <input id="year" type="number" min="2020" max="2100"></label>
         <button id="read" type="button" data-i18n="btn_read"></button>
@@ -40,7 +56,7 @@
     <div id="after-read" class="locked" inert>
     <section>
       <div class="row inline-step">
-        <h2><span class="step">02</span><label for="base-price" data-i18n="step2_title"></label></h2>
+        <h2><span class="step">2 –</span><label for="base-price" data-i18n="step2_title"></label></h2>
         <input id="base-price" type="number" min="0" step="1">
         <span class="help">
           <button type="button" class="info" data-i18n-aria-label="base_help_aria" aria-describedby="base-help">
@@ -54,7 +70,7 @@
 
     <section>
       <div class="section-head">
-        <h2><span class="step">03</span><span data-i18n="step3_title"></span></h2>
+        <h2><span class="step">3 –</span><span data-i18n="step3_title"></span></h2>
         <details class="settings" id="settings">
           <summary class="icon-summary" data-i18n-title="settings_title" data-i18n-aria-label="settings_title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
@@ -79,10 +95,6 @@
                 <label class="check"><input type="checkbox" value="0"> <span data-i18n="wd_short_0"></span></label>
               </div>
               <p class="hint" data-i18n="special_days_hint"></p>
-            </div>
-            <div class="field-group">
-              <span class="field-label" data-i18n="display_label"></span>
-              <label class="check"><input id="show-log" type="checkbox" checked> <span data-i18n="show_log_label"></span></label>
             </div>
           </div>
         </details>

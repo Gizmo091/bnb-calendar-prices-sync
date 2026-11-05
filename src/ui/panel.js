@@ -14,7 +14,7 @@ import {
     inferRules, generateYear,
     detectBasePrice, planUpdates, opsForDates,
     createExport, validateExport, scalePrices, exportFileName,
-    describeOp, eachDay, t, translateDom,
+    describeOp, eachDay, t, translateDom, useLanguage,
 } from '../core/index.js';
 import { renderYearGrid, priceLevels, describeDate } from './yearGrid.js';
 
@@ -50,7 +50,7 @@ async function callAdapter(method, ...args) {
     }
     let response;
     try {
-        response = await chrome.tabs.sendMessage(boundTab, { target: 'adapter', method, args });
+        response = await chrome.tabs.sendMessage(boundTab, { target: 'adapter', method, args, lang: $('language').value });
     }
     catch {
         throw new Error(t('err_page_unresponsive'));
@@ -545,6 +545,7 @@ async function saveSettings() {
             rounding: $('rounding').value,
             specialDays: readSpecialDays(),
             showLog: $('show-log').checked,
+            language: $('language').value,
         },
     });
 }
@@ -569,6 +570,23 @@ async function restoreSettings() {
         $('show-log').checked = saved.showLog;
     }
     syncLogVisibility();
+    if (['auto', 'en', 'fr'].includes(saved.language)) {
+        $('language').value = saved.language;
+    }
+    await applyLanguage();
+}
+
+/**
+ * Applique la langue choisie aux textes fixes du panneau ; les textes déjà
+ * écrits (journal, résumés) gardent leur langue jusqu'à la prochaine action.
+ */
+async function applyLanguage() {
+    await useLanguage($('language').value);
+    translateDom(document.body);
+    document.title = t('ext_name');
+    syncMode();
+    syncSelectionButton();
+    $('pause').textContent = t(run.paused ? 'btn_resume' : 'btn_pause');
 }
 
 /** Coefficient saisi avec une virgule ou un point ; null et message si la saisie n'est pas un nombre positif. */
@@ -947,10 +965,12 @@ for (const id of ['factor', 'rounding', 'special-days']) {
 }
 await restoreSettings();
 $('show-log').addEventListener('change', () => { syncLogVisibility(); saveSettings(); });
+$('language').addEventListener('change', async () => { await applyLanguage(); saveSettings(); });
 document.addEventListener('click', (e) => {
-    const settings = $('settings');
-    if (settings.open && !settings.contains(e.target)) {
-        settings.open = false;
+    for (const settings of document.querySelectorAll('details.settings')) {
+        if (settings.open && !settings.contains(e.target)) {
+            settings.open = false;
+        }
     }
 });
 $('plan').addEventListener('click', simulate);
