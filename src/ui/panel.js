@@ -215,7 +215,6 @@ function renderDays(days, year) {
  * nuits chargées.
  */
 async function suggestBasePrice(days, year) {
-    const hints = [];
     let confident = null;
     const farFrom = addMonths(today(), FAR_FROM_MONTHS);
     const farTo = addMonths(today(), FAR_TO_MONTHS);
@@ -223,7 +222,7 @@ async function suggestBasePrice(days, year) {
         const farDays = await callAdapter('readCalendar', { from: farFrom, to: farTo });
         const far = detectBasePrice(farDays, { horizonMonths: 0, from: farFrom });
         if (far.price !== null) {
-            hints.push(`${far.price} € sur ${far.samples} nuits de fin de calendrier (${Math.round(far.share * 100)} %)`);
+            log(`Prix de base : ${far.price} € sur ${far.samples} nuits de fin de calendrier (${Math.round(far.share * 100)} %)`);
             if (far.share >= CONFIDENT_SHARE) {
                 confident = far.price;
             }
@@ -233,18 +232,20 @@ async function suggestBasePrice(days, year) {
         log(`Fin de calendrier illisible (${e.message}), prix de base estimé sur les nuits chargées`, 'error');
     }
     const fromSite = site?.hasBasePrice ? await callAdapter('basePrice').catch(() => null) : null;
-    if (fromSite) {
-        hints.push(`${fromSite} € affiché par le site`);
-    }
     const loaded = detectBasePrice(days, { horizonMonths: 0, from: `${year}-01-01` });
-    if (confident === null && fromSite === null && loaded.price !== null) {
-        hints.push(`${loaded.price} € le plus fréquent sur les ${loaded.samples} nuits chargées (${Math.round(loaded.share * 100)} %), à vérifier`);
-    }
     const suggested = confident ?? fromSite ?? loaded.price;
     if (confident !== null || (suggested !== null && !$('base-price').value)) {
         $('base-price').value = suggested;
     }
-    $('base-hint').textContent = hints.length ? `Détecté : ${hints.join(' · ')}` : 'Prix de base introuvable, à saisir';
+    if (confident !== null) {
+        $('base-hint').textContent = `Détecté : ${confident} €`;
+    }
+    else if (suggested !== null) {
+        $('base-hint').textContent = `Estimé : ${suggested} €, à vérifier`;
+    }
+    else {
+        $('base-hint').textContent = 'Prix de base introuvable, à saisir';
+    }
     persist();
 }
 

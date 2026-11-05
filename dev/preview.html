@@ -72,7 +72,7 @@
             cells[date] = { level: levels[date], state: day.reserved ? 'reserved' : undefined, title: `${describeDate(date)} · ${day.price} €` };
         }
         renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { state: 'reserved', label: 'réservée' }] });
-        $('base-hint').textContent = 'Détecté : 160 € affiché par le site · 160 € sur 213 nuits lointaines (94 %)';
+        $('base-hint').textContent = 'Détecté : 160 €';
         $('export').disabled = $('project').disabled = $('as-is').disabled = false;
         log('365 nuits de 2026 lues sur le site, lecture terminée', 'ok');
     }
