@@ -30,6 +30,7 @@ CE QU'ELLE FAIT
 • Prévisualiser avant d'écrire quoi que ce soit : chaque nuit apparaît dans la couleur du tarif qui l'attend, les nuits déjà au bon prix et celles conservées se distinguent, et les règles déduites de l'année source sont listées en détail.
 • Tout appliquer, ou seulement une sélection : un clic ou un glisser sur la grille choisit des nuits. Le reste s'applique plus tard, sans nouvelle prévisualisation.
 • Mettre en pause ou arrêter à tout moment. Chaque opération est vérifiée sur le calendrier avant la suivante, et le journal garde la trace de tout.
+• Les vacances d'un ou plusieurs pays, pour les voyageurs qui viennent de l'autre côté d'une frontière.
 • Interface en français et en anglais, selon la langue de Chrome ou votre choix.
 
 SITES PRIS EN CHARGE
@@ -37,11 +38,11 @@ SITES PRIS EN CHARGE
 • Airbnb, le multicalendrier hôte (airbnb.fr et airbnb.com).
 • Abritel / Vrbo, le calendrier propriétaire (abritel.fr et vrbo.com).
 
-Les vacances scolaires et les jours fériés viennent de l'open data français (Éducation nationale et calendrier.api.gouv.fr) : le report d'une année sur l'autre est pensé pour les annonces situées en France.
+Les vacances scolaires et les jours fériés viennent de l'open data français (Éducation nationale et calendrier.api.gouv.fr) pour la France, et de l'OpenHolidays API pour une trentaine d'autres pays européens, région par région. Choisissez dans les réglages les pays d'où viennent vos voyageurs : un gîte en Alsace suit la France et l'Allemagne.
 
 CONFIDENTIALITÉ
 
-BnBridge ne parle qu'à la page du calendrier ouverte dans votre navigateur et aux deux API publiques des vacances. Vos prix restent dans le stockage local de votre navigateur et dans les fichiers que vous exportez. Rien n'est envoyé, ni à nous ni à personne, il n'y a ni compte ni suivi. Politique complète : https://github.com/Gizmo091/bnb-calendar-prices-sync/blob/main/PRIVACY.md
+BnBridge ne parle qu'à la page du calendrier ouverte dans votre navigateur et aux API publiques des vacances. Vos prix restent dans le stockage local de votre navigateur et dans les fichiers que vous exportez. Rien n'est envoyé, ni à nous ni à personne, il n'y a ni compte ni suivi. Politique complète : https://github.com/Gizmo091/bnb-calendar-prices-sync/blob/main/PRIVACY.md
 
 BnBridge est un projet indépendant, sans lien avec Airbnb, Abritel, Vrbo ou Expedia Group. Les interfaces des sites changent ; si une étape échoue, l'extension s'arrête sans rien écrire et dit dans le journal ce qu'elle a vu.
 

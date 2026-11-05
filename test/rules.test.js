@@ -6,8 +6,8 @@ import { eachDay } from '../src/core/dates.js';
 import { contextFor } from './helpers.js';
 
 const BASE = 150;
-const ctx2026 = contextFor(2026);
-const ctx2027 = contextFor(2027);
+const ctx2026 = await contextFor(2026);
+const ctx2027 = await contextFor(2027);
 
 /**
  * Année 2026 tarifée à la main : base 150, janvier hors vacances 200, Noël 260,
@@ -38,17 +38,17 @@ test('inferRules retrouve la grille saisie', () => {
     assert.equal(rules['none|ete>toussaint|wk'].price, BASE);
     assert.equal(rules['none|ete>toussaint|sat'].price, 190);
     assert.equal(rules['none|noel>hiver|wk'].price, 200);
-    assert.equal(rules['noel|ABC|wk'].price, 260);
+    assert.equal(rules['noel|A+B+C|wk'].price, 260);
     assert.equal(rules['hiver|A|wk'].price, 220);
-    assert.equal(rules['hiver|AB|wk'].price, 300);
-    assert.equal(rules['ete|ABC|sat'].price, 180);
+    assert.equal(rules['hiver|A+B|wk'].price, 300);
+    assert.equal(rules['ete|A+B+C|sat'].price, 180);
     assert.equal(rules['hiver|A|wk'].share, 1);
 });
 
 test('resolvePrice replie sur la saison la plus proche puis le hors-vacances voisin puis la base', () => {
     const rules = {
         'hiver|A|wk': { price: 220, samples: 5 },
-        'hiver|AB|wk': { price: 300, samples: 5 },
+        'hiver|A+B|wk': { price: 300, samples: 5 },
         'none|noel>hiver|wk': { price: 200, samples: 20 },
         'none|hiver>printemps|wk': { price: 140, samples: 20 },
         'none|hiver>printemps|sat': { price: 190, samples: 4 },

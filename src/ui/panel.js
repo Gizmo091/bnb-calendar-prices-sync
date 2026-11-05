@@ -14,7 +14,8 @@ import {
     inferRules, generateYear,
     detectBasePrice, planUpdates, opsForDates,
     createExport, validateExport, scalePrices, exportFileName,
-    describeOp, eachDay, t, translateDom, useLanguage,
+    describeOp, eachDay, t, translateDom, useLanguage, currentLocale,
+    COUNTRIES, DEFAULT_COUNTRIES,
 } from '../core/index.js';
 import { renderYearGrid, priceLevels, describeDate } from './yearGrid.js';
 
@@ -106,6 +107,7 @@ async function bind(tabId) {
         plan: null,
         planGrid: null,
         applied: null,
+        seasonNames: {},
     };
     showSiteInfo();
     if (info.listingId && !info.name) {
@@ -459,13 +461,16 @@ async function project() {
     const targetYear = Number($('target-year').value);
     try {
         log(t('log_loading_calendar', state.year, targetYear));
+        const request = { countries: readCountries(), lang: currentLocale() };
         const [ctxSource, ctxTarget] = await Promise.all([
-            callBackground('calendarContext', { year: state.year }),
-            callBackground('calendarContext', { year: targetYear }),
+            callBackground('calendarContext', { year: state.year, ...request }),
+            callBackground('calendarContext', { year: targetYear, ...request }),
         ]);
-        if (!ctxTarget.schoolPeriods.some((p) => p.start.startsWith(String(targetYear)) && p.season === 'noel')) {
-            log(t('log_no_christmas', targetYear), 'error');
+        // Les calendriers scolaires paraissent avec un an d'avance au mieux : la fin de l'année cible peut manquer.
+        if (!ctxTarget.schoolPeriods.some((p) => p.start >= `${targetYear}-09-01`)) {
+            log(t('log_holidays_missing', targetYear), 'error');
         }
+        state.seasonNames = { ...ctxSource.seasonNames, ...ctxTarget.seasonNames };
         const specialDays = readSpecialDays();
         state.rules = inferRules(state.days, labelYear(state.year, ctxSource, { specialDays }));
         renderRules(state.rules);
@@ -516,7 +521,7 @@ function renderRules(rules) {
         const r = rules[key];
         const tr = document.createElement('tr');
         const share = Math.round(r.share * 100);
-        tr.innerHTML = `<td>${describeRuleKey(key)}</td><td class="num">${r.price}</td><td class="num">${r.samples}</td><td class="num share"><i style="--w:${share}%"></i>${share} %</td>`;
+        tr.innerHTML = `<td>${describeRuleKey(key, state.seasonNames)}</td><td class="num">${r.price}</td><td class="num">${r.samples}</td><td class="num share"><i style="--w:${share}%"></i>${share} %</td>`;
         tbody.append(tr);
     }
     $('rules-details').hidden = false;
@@ -544,6 +549,7 @@ async function saveSettings() {
             factor: $('factor').value,
             rounding: $('rounding').value,
             specialDays: readSpecialDays(),
+            countries: readCountries(),
             showLog: $('show-log').checked,
             language: $('language').value,
         },
@@ -570,6 +576,8 @@ async function restoreSettings() {
         $('show-log').checked = saved.showLog;
     }
     syncLogVisibility();
+    const countries = (saved.countries ?? []).filter((c) => COUNTRIES.includes(c));
+    renderCountries(countries.length ? countries : DEFAULT_COUNTRIES);
     if (['auto', 'en', 'fr'].includes(saved.language)) {
         $('language').value = saved.language;
     }
@@ -587,6 +595,46 @@ async function applyLanguage() {
     syncMode();
     syncSelectionButton();
     $('pause').textContent = t(run.paused ? 'btn_resume' : 'btn_pause');
+    renderCountries(readCountries());
+}
+
+/* ---------- Vacances à suivre ---------- */
+
+/** Pays dont les vacances comptent : celles des voyageurs, pas du lieu de l'annonce. */
+function readCountries() {
+    return [...$('countries').querySelectorAll('[data-country]')].map((chip) => chip.dataset.country);
+}
+
+function renderCountries(codes) {
+    const names = new Intl.DisplayNames([currentLocale()], { type: 'region' });
+    const list = $('countries');
+    list.innerHTML = '';
+    for (const code of codes) {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.dataset.country = code;
+        chip.append(document.createTextNode(names.of(code)));
+        if (codes.length > 1) {
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'chip-remove';
+            remove.setAttribute('aria-label', t('remove_country', names.of(code)));
+            remove.textContent = '×';
+            remove.addEventListener('click', () => {
+                renderCountries(codes.filter((c) => c !== code));
+                saveSettings();
+            });
+            chip.append(remove);
+        }
+        list.append(chip);
+    }
+    const add = $('country-add');
+    add.innerHTML = '';
+    add.append(new Option(t('add_country'), ''));
+    const remaining = COUNTRIES.filter((c) => !codes.includes(c)).sort((a, b) => names.of(a).localeCompare(names.of(b), currentLocale()));
+    for (const code of remaining) {
+        add.append(new Option(names.of(code), code));
+    }
 }
 
 /** Coefficient saisi avec une virgule ou un point ; null et message si la saisie n'est pas un nombre positif. */
@@ -963,9 +1011,16 @@ $('mode').addEventListener('change', syncMode);
 for (const id of ['factor', 'rounding', 'special-days']) {
     $(id).addEventListener('change', saveSettings);
 }
+renderCountries(DEFAULT_COUNTRIES);
 await restoreSettings();
 $('show-log').addEventListener('change', () => { syncLogVisibility(); saveSettings(); });
 $('language').addEventListener('change', async () => { await applyLanguage(); saveSettings(); });
+$('country-add').addEventListener('change', () => {
+    if ($('country-add').value) {
+        renderCountries([...readCountries(), $('country-add').value]);
+        saveSettings();
+    }
+});
 document.addEventListener('click', (e) => {
     for (const settings of document.querySelectorAll('details.settings')) {
         if (settings.open && !settings.contains(e.target)) {

@@ -30,6 +30,7 @@ WHAT IT DOES
 • Preview before anything is written: every night appears in the colour of the rate it will get, nights already right and nights kept as they are stand apart, and the rules inferred from the source year are listed in detail.
 • Apply everything, or only a selection: click or drag on the grid to choose nights. The rest can be applied later without a new preview.
 • Pause or stop at any time. Each operation is checked on the calendar before the next one starts, and the log keeps a trace of everything.
+• Holidays of one or several countries, for guests who come from across a border.
 • Interface in English and French, following Chrome's language or your own choice.
 
 SUPPORTED SITES
@@ -37,11 +38,11 @@ SUPPORTED SITES
 • Airbnb, the host multicalendar (airbnb.fr and airbnb.com).
 • Abritel / Vrbo, the owner calendar (abritel.fr and vrbo.com).
 
-School and public holidays come from the French open data (Éducation nationale and calendrier.api.gouv.fr), so the year-to-year carry-over is tuned for listings in France.
+School and public holidays come from the French open data (Éducation nationale and calendrier.api.gouv.fr) for France, and from the OpenHolidays API for some thirty other European countries, region by region. Pick the countries your guests come from in the settings: a cottage in Alsace follows France and Germany.
 
 PRIVACY
 
-BnBridge talks only to the calendar page open in your browser and to the two public holiday APIs. Your prices stay in your browser's local storage and in the files you export. Nothing is sent to us or to anyone else, there is no account and no tracking. Full policy: https://github.com/Gizmo091/bnb-calendar-prices-sync/blob/main/PRIVACY.md
+BnBridge talks only to the calendar page open in your browser and to public holiday APIs. Your prices stay in your browser's local storage and in the files you export. Nothing is sent to us or to anyone else, there is no account and no tracking. Full policy: https://github.com/Gizmo091/bnb-calendar-prices-sync/blob/main/PRIVACY.md
 
 BnBridge is an independent project. It is not affiliated with, endorsed by or connected to Airbnb, Abritel, Vrbo or Expedia Group. The sites' interfaces change; if a step fails, the extension stops without writing and tells you what it saw in the log.
 

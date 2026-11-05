@@ -16,10 +16,10 @@ to any third party. There is no account, no analytics, no tracking, no
 advertising.
 
 **What it connects to.** Only the calendar page already open in your browser
-(airbnb.fr, airbnb.com, abritel.fr, vrbo.com), and two public, anonymous
-French open data APIs for school and public holidays
-(data.education.gouv.fr and calendrier.api.gouv.fr), which receive nothing
-but the year requested.
+(airbnb.fr, airbnb.com, abritel.fr, vrbo.com), and public, anonymous open
+data APIs for school and public holidays (data.education.gouv.fr and
+calendrier.api.gouv.fr for France, openholidaysapi.org for other countries),
+which receive nothing but the country and the year requested.
 
 **How to delete your data.** Remove the extension, or clear its storage from
 `chrome://extensions`. Exported files are ordinary files on your computer.
@@ -49,9 +49,10 @@ d'audience, ni suivi, ni publicité.
 
 **À quoi elle se connecte.** Uniquement à la page du calendrier déjà ouverte
 dans votre navigateur (airbnb.fr, airbnb.com, abritel.fr, vrbo.com), et à
-deux API publiques et anonymes de l'open data français pour les vacances
-scolaires et les jours fériés (data.education.gouv.fr et
-calendrier.api.gouv.fr), qui ne reçoivent que l'année demandée.
+des API publiques et anonymes d'open data pour les vacances scolaires et les
+jours fériés (data.education.gouv.fr et calendrier.api.gouv.fr pour la
+France, openholidaysapi.org pour les autres pays), qui ne reçoivent que le
+pays et l'année demandés.
 
 **Supprimer vos données.** Désinstallez l'extension, ou videz son stockage
 depuis `chrome://extensions`. Les fichiers exportés sont des fichiers

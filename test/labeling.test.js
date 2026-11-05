@@ -4,7 +4,7 @@ import './setup.js';
 import { labelDay, ruleKey, labelYear, describeRuleKey, parseRuleKey, neighbours, dayTypeOf } from '../src/core/labeling.js';
 import { contextFor } from './helpers.js';
 
-const ctx = contextFor(2026);
+const ctx = await contextFor(2026);
 
 test('une nuit de février en zone A seule', () => {
     const label = labelDay('2026-02-09', ctx);
@@ -52,7 +52,7 @@ test('labelYear couvre 365 jours', () => {
 });
 
 test('describeRuleKey et parseRuleKey', () => {
-    assert.equal(describeRuleKey('hiver|AB|sat'), "Vacances d'hiver · zones A+B · samedi");
+    assert.equal(describeRuleKey('hiver|A+B|sat'), "Vacances d'hiver · zones A+B · samedi");
     assert.equal(describeRuleKey('none|noel>hiver|wk'), 'Hors vacances · entre Noël et hiver · autres jours');
     assert.deepEqual(parseRuleKey('none|hiver>printemps|wk'), { season: 'none', zones: [], gap: 'hiver>printemps', dayType: 'wk' });
     assert.deepEqual(parseRuleKey('hiver|A|sat'), { season: 'hiver', zones: ['A'], gap: null, dayType: 'sat' });

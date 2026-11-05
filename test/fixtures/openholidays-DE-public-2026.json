@@ -1,0 +1,4 @@
+[
+  { "startDate": "2026-10-03", "nationwide": true, "name": [{ "language": "DE", "text": "Tag der Deutschen Einheit" }, { "language": "EN", "text": "German Unity Day" }, { "language": "FR", "text": "Jour de l'unité allemande" }] },
+  { "startDate": "2026-11-01", "nationwide": false, "name": [{ "language": "DE", "text": "Allerheiligen" }] }
+]

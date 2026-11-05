@@ -17,7 +17,8 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
 - **Exporter** les prix d'une année, nuit par nuit, dans un fichier de prix
   (`.bnbprices`, du JSON lisible).
 - **Importer** un fichier de prix et l'appliquer au calendrier d'un site.
-- **Reporter une année sur la suivante** en suivant les vacances scolaires :
+- **Reporter une année sur la suivante** en suivant les vacances scolaires du
+  ou des pays choisis :
   les prix de l'année N sont traduits en règles par période (Noël, hiver zone A,
   hiver zones A+B, été, hors vacances…), puis réappliqués sur les dates
   correspondantes de l'année N+1, qui ne tombent jamais aux mêmes dates. Les
@@ -47,10 +48,15 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
   exporté d'un site sur l'autre, pour la même année, avec un coefficient et un
   arrondi optionnels pour ajuster le prix.
 
-Les vacances scolaires viennent de l'open data de l'Éducation nationale
-(`fr-en-calendrier-scolaire`), les jours fériés de `calendrier.api.gouv.fr` ;
-ces deux API acceptent les requêtes de toute origine, l'extension ne demande
-donc aucune permission sur elles.
+Les vacances à suivre se choisissent dans les réglages, un ou plusieurs pays :
+celles des voyageurs, pas celles du lieu de l'annonce. Pour la France, les
+vacances scolaires viennent de l'open data de l'Éducation nationale
+(`fr-en-calendrier-scolaire`, zones A, B, C, publié jusqu'à trois ans
+d'avance) et les jours fériés de `calendrier.api.gouv.fr`. Pour les autres
+pays, l'[OpenHolidays API](https://www.openholidaysapi.org) fournit vacances
+et fériés d'une trentaine de pays européens, région par région. Ces API
+acceptent les requêtes de toute origine, l'extension ne demande aucune
+permission sur elles.
 
 ## Installation (mode développeur)
 

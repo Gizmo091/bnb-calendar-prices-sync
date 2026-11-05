@@ -81,7 +81,7 @@ export function labelDay(iso, ctx, { specialDays = DEFAULT_SPECIAL_DAYS } = {}) 
 }
 
 export function ruleKey(label) {
-    const scope = label.gap ?? (label.zones.join('') || '-');
+    const scope = label.gap ?? (label.zones.join('+') || '-');
     return `${label.season}|${scope}|${label.dayType}`;
 }
 
@@ -90,7 +90,7 @@ export function parseRuleKey(key) {
     if (scope.includes('>')) {
         return { season, zones: [], gap: scope, dayType };
     }
-    return { season, zones: scope === '-' ? [] : scope.split(''), gap: null, dayType };
+    return { season, zones: scope === '-' ? [] : scope.split('+'), gap: null, dayType };
 }
 
 /** @returns {Map<string, object>} date -> label */
@@ -108,20 +108,26 @@ export function describeDayType(dayType) {
     return index === -1 ? t('other_days') : t(`day_${index}`);
 }
 
-export function describeGap(gap) {
+/** Nom d'une saison : traduit pour les saisons françaises, sinon celui fourni par la source. */
+export function describeSeason(season, names = {}) {
+    return SEASONS.includes(season) ? t(`season_${season}`) : names[season] ?? season;
+}
+
+export function describeGap(gap, names = {}) {
     const [before, after] = gap.split('>');
-    const short = (name) => (SHORT.includes(name) ? t(`short_${name}`) : name);
+    const short = (name) => (SHORT.includes(name) ? t(`short_${name}`) : names[name] ?? name);
     return t('gap_between', short(before), short(after));
 }
 
-export function describeRuleKey(key) {
+/** Libellé d'une règle ; `names` donne le nom des saisons hors France. Les codes ISO de région perdent leur préfixe pays. */
+export function describeRuleKey(key, names = {}) {
     const { season, zones, gap, dayType } = parseRuleKey(key);
-    const parts = [SEASONS.includes(season) ? t(`season_${season}`) : season];
+    const parts = [describeSeason(season, names)];
     if (zones.length) {
-        parts.push(t(zones.length > 1 ? 'zone_many' : 'zone_one', zones.join('+')));
+        parts.push(t(zones.length > 1 ? 'zone_many' : 'zone_one', zones.map((z) => z.replace(/^[A-Z]{2}-/, '')).join('+')));
     }
     if (gap) {
-        parts.push(describeGap(gap));
+        parts.push(describeGap(gap, names));
     }
     parts.push(describeDayType(dayType));
     return parts.join(' · ');

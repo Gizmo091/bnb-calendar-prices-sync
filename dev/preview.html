@@ -14,7 +14,7 @@
 <body>
 <script type="module">
     import { renderYearGrid, priceLevels, describeDate } from '../src/ui/yearGrid.js';
-    import { eachDay, weekday, useLanguage, translateDom, t } from '../src/core/index.js';
+    import { eachDay, weekday, useLanguage, translateDom, t, describeRuleKey } from '../src/core/index.js';
 
     // Paramètres : ?dark, ?lang=fr|en, ?state=unsupported|empty|loaded|reading|planned|applied, &overwrite, &selected
     const params = new URLSearchParams(location.search);
@@ -39,8 +39,14 @@
     };
     retranslate();
     document.getElementById('language').value = lang;
+    document.getElementById('countries').innerHTML = '<span class="chip" data-country="FR">France</span>';
+    document.getElementById('country-add').append(new Option(t('add_country'), ''));
     document.getElementById('language').addEventListener('change', async (e) => { await useLanguage(e.target.value === 'auto' ? 'fr' : e.target.value); retranslate(); });
     const $ = (id) => document.getElementById(id);
+    const planLegend = () => [
+        { scale: [118, 398], label: t('legend_to_apply') }, { state: 'ok', label: t('legend_ok') }, { state: 'custom', label: t('legend_kept') },
+        { flags: ['reserved'], label: t('note_reserved') }, { flags: ['blocked'], label: t('note_blocked') }, { state: 'ok', flags: ['past'], label: t('note_past') },
+    ];
 
     if (stage === 'unsupported') {
         $('unsupported').hidden = false;
@@ -138,22 +144,22 @@
     }
     if (stage === 'planned' || stage === 'applied') {
         const rules = [
-            ['Vacances d\'hiver · zones A, B, C · samedi', 398, 4, 100],
-            ['Vacances d\'hiver · zones A, B, C · autres jours', 220, 24, 92],
-            ['Vacances d\'été · zones A, B, C · samedi', 355, 9, 100],
-            ['Vacances d\'été · zones A, B, C · autres jours', 178, 53, 96],
-            ['Hors vacances · entre Noël et hiver · samedi', 237, 5, 80],
-            ['Hors vacances · entre Noël et hiver · autres jours', 118, 30, 97],
+            ['hiver|A+B+C|sat', 398, 4, 100],
+            ['hiver|A+B+C|wk', 220, 24, 92],
+            ['ete|A+B+C|sat', 355, 9, 100],
+            ['ete|A+B+C|wk', 178, 53, 96],
+            ['none|noel>hiver|sat', 237, 5, 80],
+            ['none|noel>hiver|wk', 118, 30, 97],
         ];
         const tbody = $('rules-table').querySelector('tbody');
         for (const [k, p, n, s] of rules) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${k}</td><td class="num">${p}</td><td class="num">${n}</td><td class="num share"><i style="--w:${s}%"></i>${s} %</td>`;
+            tr.innerHTML = `<td>${describeRuleKey(k)}</td><td class="num">${p}</td><td class="num">${n}</td><td class="num share"><i style="--w:${s}%"></i>${s} %</td>`;
             tbody.append(tr);
         }
         $('rules-details').hidden = false;
         $('apply').disabled = false;
-        $('plan-summary').textContent = '212 nuits à modifier en 14 opérations · 96 déjà au bon prix · 57 ignorées';
+        $('plan-summary').textContent = t('plan_summary', 212, 14, 96, 57);
         const ops = [
             ['2027-02-06', '2027-03-07', 29, '<span class="days">autres</span> 220<br><span class="days">sam</span> 398'],
             ['2027-03-08', '2027-04-09', 33, '<span class="days">autres</span> 118<br><span class="days">sam</span> 237'],

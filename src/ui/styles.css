@@ -165,11 +165,19 @@ header .icon-summary { margin: 0 -4px 0 0; }
     background: var(--surface); box-shadow: var(--shadow);
 }
 .popover .field { justify-content: space-between; white-space: normal; }
+.popover .field > select { min-width: 0; flex: 0 1 auto; }
 .field-group { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); }
 .field-label { color: var(--fg-2); }
 .days { display: flex; flex-wrap: wrap; gap: 4px 12px; }
 .days .check { font: 12px/20px var(--mono); gap: 6px; }
 .field-group .hint { margin: 0; font-size: 12px; line-height: 16px; color: var(--fg-3); }
+/* Pays suivis : des pastilles, chacune retirable sauf la dernière. */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px 2px 10px; border-radius: 999px; background: var(--raised); font-size: 12px; line-height: 18px; }
+.chip:not(:has(.chip-remove)) { padding-right: 10px; }
+button.chip-remove { width: 18px; height: 18px; min-height: 0; padding: 0; border: 0; border-radius: 9px; background: transparent; color: var(--fg-3); font: 500 14px/1 system-ui, sans-serif; }
+button.chip-remove:hover { background: var(--hairline-strong); color: var(--fg); border-color: transparent; }
+#country-add { max-width: 100%; }
 
 /* ---------- Texte ---------- */
 
