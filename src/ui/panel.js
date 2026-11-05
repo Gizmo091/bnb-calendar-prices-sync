@@ -480,15 +480,16 @@ function renderPlanGrid(p) {
             continue;
         }
         const same = cur.price === next.price;
+        const custom = skipped.get(date) === 'custom';
         const notes = [];
         if (!same) {
-            notes.push(skipped.get(date) === 'custom' ? 'personnalisée, conservée' : flags.includes('reserved') ? 'réservée, conservée' : flags.includes('past') ? 'passée' : 'à modifier');
+            notes.push(custom ? 'personnalisée, conservée' : flags.includes('reserved') ? 'réservée, conservée' : flags.includes('past') ? 'passée' : 'à modifier');
         }
         else if (flags.includes('reserved')) {
             notes.push('réservée');
         }
         cells[date] = {
-            state: same ? 'ok' : 'diff',
+            state: same ? 'ok' : custom ? 'custom' : 'diff',
             flags,
             title: `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`,
         };
@@ -496,7 +497,8 @@ function renderPlanGrid(p) {
     state.planGrid = renderYearGrid($('plan-grid'), state.targetYear, cells, {
         legend: [
             { state: 'ok', label: 'bon prix' },
-            { state: 'diff', label: 'prix différent' },
+            { state: 'diff', label: 'à modifier' },
+            { state: 'custom', label: 'personnalisée, conservée' },
             { state: 'ok', flags: ['reserved'], label: 'réservée' },
             { state: 'ok', flags: ['past'], label: 'passée' },
         ],

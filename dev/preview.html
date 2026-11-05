@@ -103,7 +103,7 @@
         ];
         const pc = {};
         for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'ok' };
-        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = { state: 'diff', title: 'personnalisée, conservée' };
+        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = { state: 'custom', title: 'personnalisée, conservée' };
         for (const d of eachDay('2027-02-13', '2027-02-20')) pc[d] = { state: 'ok', flags: ['reserved'] };
         ops.forEach(([f, t], i) => {
             for (const d of eachDay(f, t)) {
@@ -112,7 +112,7 @@
             }
         });
         renderYearGrid($('plan-grid'), 2027, pc, { legend: [
-            { state: 'ok', label: 'bon prix' }, { state: 'diff', label: 'prix différent' },
+            { state: 'ok', label: 'bon prix' }, { state: 'diff', label: 'à modifier' }, { state: 'custom', label: 'personnalisée, conservée' },
             { state: 'ok', flags: ['reserved'], label: 'réservée' }, { state: 'ok', flags: ['past'], label: 'passée' },
         ] });
         const ul = $('skipped-list');

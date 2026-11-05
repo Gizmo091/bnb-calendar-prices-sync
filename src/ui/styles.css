@@ -212,7 +212,8 @@ label.file input { display: none; }
 .cell[data-level="4"] { background-color: color-mix(in oklab, var(--accent) 76%, var(--raised)); }
 .cell[data-level="5"] { background-color: var(--accent); }
 .cell[data-state="ok"] { background-color: var(--accent); }
-.cell[data-state="diff"] { background-color: color-mix(in oklab, var(--fg) 22%, var(--raised)); }
+.cell[data-state="diff"] { background-color: color-mix(in oklab, var(--fg) 18%, var(--raised)); }
+.cell[data-state="custom"] { background-color: color-mix(in oklab, var(--fg) 55%, var(--raised)); }
 .cell[data-state="busy"] { background-color: color-mix(in oklab, var(--accent) 60%, var(--raised)); animation: busy 900ms var(--ease) infinite alternate; }
 .cell[data-state="error"] { background-color: var(--negative); }
 .cell[data-state="unknown"] { background-color: transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
