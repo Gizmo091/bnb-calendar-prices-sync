@@ -50,12 +50,12 @@
     $('year').value = 2026;
     $('target-year').value = 2027;
     $('base-price').value = 160;
-    const log = (t, level = 'info') => {
+    const log = (text, level = 'info') => {
         const line = document.createElement('span');
         line.className = `line ${level}`;
         const time = document.createElement('time');
         time.textContent = '18:42:07';
-        line.append(time, document.createTextNode(t));
+        line.append(time, document.createTextNode(text));
         $('log').append(line);
     };
     if (stage === 'empty' || stage === 'unsupported') {
@@ -86,12 +86,12 @@
         for (const [date, day] of Object.entries(days)) {
             cells[date] = { level: levels[date], flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [], title: `${describeDate(date)} · ${day.price} €` };
         }
-        const legend = [{ scale: [min, max] }, { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }];
+        const legend = [{ scale: [min, max] }, { flags: ['reserved'], label: t('note_reserved') }, { flags: ['blocked'], label: t('note_blocked') }];
         if (stage === 'loaded') {
             // Import simulé : toutes les nuits se dévoilent une à une, puis la grille finale.
             const pending = Object.fromEntries(Object.keys(cells).map((d) => [d, { state: 'pending' }]));
             const grid = renderYearGrid($('read-grid'), 2026, pending);
-            $('read-summary').textContent = 'Chargement de prix-airbnb-2026.bnbprices…';
+            $('read-summary').textContent = t('loading_file', 'bnbridge-airbnb-2026.bnbprices');
             let cursor = performance.now();
             for (const d of Object.keys(cells).sort()) {
                 cursor = Math.max(cursor, performance.now()) + 5;
@@ -99,34 +99,31 @@
             }
             setTimeout(() => {
                 renderYearGrid($('read-grid'), 2026, cells, { legend });
-                $('read-summary').textContent = '365 nuits de 2026 importées de prix-airbnb-2026.bnbprices';
+                $('read-summary').textContent = t('days_summary', 365, 2026, t('origin_imported', 'bnbridge-airbnb-2026.bnbprices'));
             }, cursor - performance.now() + 400);
         }
         else {
             renderYearGrid($('read-grid'), 2026, cells, { legend });
         }
-        $('base-hint').textContent = 'Détecté : 160 €';
+        $('base-hint').textContent = t('base_detected', 160);
         $('export').disabled = $('plan').disabled = false;
-        log('365 nuits de 2026 lues sur le site, lecture terminée', 'ok');
+        log(t('days_summary', 365, 2026, t('origin_read')), 'ok');
     }
     if (stage === 'reading') {
         $('plan').disabled = true;
-        $('plan-summary').textContent = 'Lecture des prix de 2027 · 0/12 mois';
+        $('plan-summary').textContent = t('reading_progress', 2027, 0, 12);
         const pc = {};
-        for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'pending', title: 'lecture en cours' };
-        const grid = renderYearGrid($('plan-grid'), 2027, pc, { legend: [
-            { scale: [118, 398], label: 'à appliquer' }, { state: 'ok', label: 'déjà au bon prix' }, { state: 'custom', label: 'conservée telle quelle' },
-            { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }, { state: 'ok', flags: ['past'], label: 'passée' },
-        ] });
-        $('apply-hint').textContent = 'Prévisualisation en cours';
-        log('Lecture des prix actuels de 2027 pour comparaison…');
+        for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'pending', title: t('cell_reading') };
+        const grid = renderYearGrid($('plan-grid'), 2027, pc, { legend: planLegend() });
+        $('apply-hint').textContent = t('hint_previewing');
+        log(t('log_reading_current', 2027));
         // Lecture simulée : un mois toutes les 600 ms, révélé case par case.
         const specOf = (d) => d < '2027-02-06' ? { state: 'custom' } : d < '2027-03-08' ? { level: weekday(d) === 6 ? 1 : 0.4, selectable: true } : (d >= '2027-02-13' && d <= '2027-02-20') ? { state: 'ok', flags: ['reserved'] } : { state: 'ok' };
         let cursor = performance.now();
         grid.setState('2027-01-01', 'next');
         for (let m = 1; m <= 12; m++) {
             setTimeout(() => {
-                $('plan-summary').textContent = `Lecture des prix de 2027 · ${m}/12 mois`;
+                $('plan-summary').textContent = t('reading_progress', 2027, m, 12);
                 const mm = String(m).padStart(2, '0');
                 const last = new Date(Date.UTC(2027, m, 0)).getUTCDate();
                 for (const d of eachDay(`2027-${mm}-01`, `2027-${mm}-${last}`)) {
@@ -170,46 +167,49 @@
         // Niveau de prix des tarifs à appliquer, sur l'échelle de l'année projetée (118 → 398 €).
         const opPrices = [[220, 398], [118, 237], [150, 260], [178, 355]];
         const { levels: opLevels } = priceLevels(Object.fromEntries(opPrices.flat().map((p) => [p, { price: p }])));
-        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = overwrite ? { level: opLevels[220], selectable: true, title: `${d} · 166 € → 220 € · personnalisée, écrasée` } : { state: 'custom', title: `${d} · 166 € · personnalisée, conservée` };
+        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = overwrite ? { level: opLevels[220], selectable: true, title: `${d} · 166 € → 220 € · ${t('note_custom_overwritten')}` } : { state: 'custom', title: `${d} · 166 € · ${t('note_custom_kept')}` };
         for (const d of eachDay('2027-02-13', '2027-02-20')) pc[d] = { state: 'ok', flags: ['reserved'] };
         for (const d of eachDay('2027-10-01', '2027-10-10')) pc[d] = { state: 'ok', flags: ['blocked'] };
         for (const d of eachDay('2027-01-01', '2027-01-15')) pc[d] = { ...pc[d], flags: [...(pc[d].flags ?? []), 'past'] };
-        ops.forEach(([f, t], i) => {
-            for (const d of eachDay(f, t)) {
+        ops.forEach(([from, to], i) => {
+            for (const d of eachDay(from, to)) {
                 if (pc[d].flags) continue;
                 const price = opPrices[i][weekday(d) === 6 ? 1 : 0];
-                const planned = { level: opLevels[price], selectable: true, title: `${d} · 160 € → ${price} € · à modifier` };
+                const planned = { level: opLevels[price], selectable: true, title: `${d} · 160 € → ${price} € · ${t('note_to_change')}` };
                 pc[d] = stage === 'applied' ? (i < 2 ? { state: 'ok' } : i === 2 ? { ...planned, state: 'busy' } : planned) : planned;
             }
         });
-        const grid = renderYearGrid($('plan-grid'), 2027, pc, {
-            legend: [
-                { scale: [118, 398], label: 'à appliquer' }, { state: 'ok', label: 'déjà au bon prix' }, { state: 'custom', label: 'conservée telle quelle' },
-                { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }, { state: 'ok', flags: ['past'], label: 'passée' },
-            ],
-            onSelect: (dates) => {
-                $('apply-selection').disabled = dates.length === 0;
-                $('apply-selection').textContent = dates.length ? `Appliquer à la sélection (${dates.length} nuit${dates.length > 1 ? 's' : ''})` : 'Appliquer à la sélection';
-            },
-        });
+        const selectionButton = (count) => {
+            $('apply-selection').disabled = count === 0;
+            $('apply-selection').textContent = count > 1 ? t('btn_apply_selection_count', count) : count === 1 ? t('btn_apply_selection_one') : t('btn_apply_selection');
+        };
+        const grid = renderYearGrid($('plan-grid'), 2027, pc, { legend: planLegend(), onSelect: (dates) => selectionButton(dates.length) });
         if (params.has('selected')) {
             for (const d of eachDay('2027-07-10', '2027-07-24')) $('plan-grid').querySelector(`[data-date="${d}"][data-selectable]`)?.toggleAttribute('data-selected', true);
-            $('apply-selection').disabled = false;
-            $('apply-selection').textContent = `Appliquer à la sélection (${grid.selected().length} nuits)`;
+            selectionButton(grid.selected().length);
         }
-        $('apply-hint').textContent = 'Cliquez ou glissez sur la grille pour n\'appliquer qu\'une partie des nuits';
+        $('apply-hint').textContent = t('hint_select');
         const ul = $('skipped-list');
         for (const d of eachDay('2027-01-02', '2027-01-09')) {
             const li = document.createElement('li');
-            li.textContent = `${d} · déjà personnalisée (166 au lieu de 118)`;
+            li.textContent = `${d} · ${t('skip_custom')}${t('skip_detail', 166, 118)}`;
             ul.append(li);
         }
         $('skipped-details').hidden = false;
-        log('6 règles inférées, 365 nuits projetées sur 2027', 'ok');
-        log('Lecture des prix actuels de 2027 pour comparaison…');
-        log('Simulation : 14 opérations, 57 nuits ignorées', 'ok');
+        log(t('log_projected', 6, 365, 2027), 'ok');
+        log(t('log_reading_current', 2027));
+        log(t('log_preview', 14, 57), 'ok');
         if (stage === 'applied') {
-            log('Arrêt : Carte « Prix par nuit » introuvable dans la barre latérale', 'error');
+            // Enregistrement en cours : la troisième opération est en train de s'écrire.
+            $('apply').hidden = $('apply-selection').hidden = true;
+            $('pause').hidden = $('stop').hidden = false;
+            $('plan-summary').textContent = t('applying_op', `${t('wd_short_1')}/${t('wd_short_2')}/${t('wd_short_3')}/${t('wd_short_4')}/${t('wd_short_5')}/${t('wd_short_0')} 150 · ${t('wd_short_6')} 260`, '2027-04-10', '2027-04-25');
+            $('progress').hidden = false;
+            $('progress').querySelector('.track i').style.setProperty('--w', '34%');
+            $('progress').querySelector('.count').textContent = t('progress_nights', 72, 212);
+            $('apply-hint').textContent = '';
+            log(t('applying_op', '220 · sam 398', '2027-02-06', '2027-03-07'));
+            log(t('applying_op', '118 · sam 237', '2027-03-08', '2027-04-09'));
         }
     }
 </script>

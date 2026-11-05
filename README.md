@@ -116,6 +116,10 @@ src/
   ui/          panneau latéral : page, gabarit, styles, grille de l'année
   background.js  ouvre le panneau au clic, relaie les API publiques avec cache
 dev/preview.html  aperçu du panneau hors extension (servir le dépôt en HTTP, `?dark`, `?lang=en`, `?state=…`)
+dev/store.html    compositions des visuels du store, capturées par scripts/screenshots.sh
+store/            fiche du store (en, fr) et visuels générés
+scripts/          empaquetage, captures, téléversement sur le Web Store
+docs/PUBLISHING.md  marche à suivre pour publier
 test/
 ```
 
@@ -153,6 +157,13 @@ Limites connues sur Airbnb :
   calendrier affiché, lui, lirait le prix remisé ;
 - Airbnb n'indique pas si un prix est personnalisé : une nuit est considérée
   comme personnalisée quand son prix diffère du prix de base.
+
+## Publication
+
+Les textes de la fiche du Chrome Web Store sont dans `store/`, les visuels se
+régénèrent avec `npm run screenshots`, l'archive avec `npm run zip`, et un tag
+`vX.Y.Z` déclenche la release (voir `docs/PUBLISHING.md`). La politique de
+confidentialité est dans `PRIVACY.md`.
 
 ## Avertissement
 

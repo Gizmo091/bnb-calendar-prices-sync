@@ -7,7 +7,8 @@
   "scripts": {
     "test": "node --test",
     "check": "for f in $(find src dev -name \"*.js\"); do node --check \"$f\" || exit 1; done",
-    "zip": "mkdir -p dist && rm -f dist/extension.zip && zip -r dist/extension.zip manifest.json _locales src -x '*.DS_Store'"
+    "zip": "sh scripts/package.sh",
+    "screenshots": "sh scripts/screenshots.sh"
   },
   "engines": {
     "node": ">=20"

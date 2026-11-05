@@ -1,0 +1,43 @@
+name: Release
+
+# Un tag vX.Y.Z publie une version : l'archive est jointe à la release GitHub
+# et, si les secrets du Chrome Web Store sont définis, téléversée puis publiée.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      HAS_WEBSTORE: ${{ secrets.WEBSTORE_REFRESH_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Vérifier que le tag correspond à la version du manifeste
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          [ "v$version" = "${GITHUB_REF_NAME}" ] || { echo "manifest.json est en $version, le tag est ${GITHUB_REF_NAME}" >&2; exit 1; }
+      - name: Vérifier la syntaxe et lancer les tests
+        run: npm run check && npm test
+      - name: Construire l'archive
+        id: package
+        run: echo "archive=$(npm run -s zip)" >> "$GITHUB_OUTPUT"
+      - name: Créer la release GitHub avec l'archive
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.package.outputs.archive }}
+          generate_release_notes: true
+      - name: Téléverser et publier sur le Chrome Web Store
+        if: env.HAS_WEBSTORE == 'true'
+        env:
+          WEBSTORE_CLIENT_ID: ${{ secrets.WEBSTORE_CLIENT_ID }}
+          WEBSTORE_CLIENT_SECRET: ${{ secrets.WEBSTORE_CLIENT_SECRET }}
+          WEBSTORE_REFRESH_TOKEN: ${{ secrets.WEBSTORE_REFRESH_TOKEN }}
+          WEBSTORE_EXTENSION_ID: ${{ secrets.WEBSTORE_EXTENSION_ID }}
+        run: sh scripts/webstore.sh "${{ steps.package.outputs.archive }}" publish

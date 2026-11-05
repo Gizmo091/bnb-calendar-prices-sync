@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Visuels du Chrome Web Store</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    /*
+     * Compositions pour la fiche du store, capturées par scripts/screenshots.sh :
+     * ?shot=read|plan|select|apply|prefs&lang=fr|en   capture 1280 × 800
+     * ?tile=small&lang=…                                vignette 440 × 280
+     * ?tile=marquee&lang=…                              bandeau 1400 × 560
+     */
+    html, body { margin: 0; }
+    body { font: 400 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: #fff; background: #1e3f93; }
+    .frame { position: relative; overflow: hidden; background: linear-gradient(135deg, #3568d8 0%, #1e3f93 55%, #14295f 100%); }
+    .frame.shot { width: 1280px; height: 800px; display: flex; align-items: center; gap: 48px; padding: 0 64px; box-sizing: border-box; }
+    .frame::before { content: ""; position: absolute; inset: auto -120px -220px auto; width: 640px; height: 640px; border-radius: 50%; background: radial-gradient(circle, rgba(244, 192, 74, .28), transparent 62%); }
+    .copy { position: relative; flex: 1; min-width: 0; }
+    .copy .wordmark { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
+    .copy .wordmark svg { width: 44px; height: 44px; }
+    .copy .wordmark b { font-size: 26px; font-weight: 700; letter-spacing: -.3px; }
+    .copy h1 { margin: 0 0 20px; font-size: 42px; line-height: 1.12; font-weight: 700; letter-spacing: -.6px; }
+    .copy ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 19px; color: rgba(255, 255, 255, .86); }
+    .copy li { display: flex; gap: 12px; align-items: flex-start; }
+    .copy li::before { content: ""; flex: none; width: 10px; height: 10px; margin-top: 9px; border-radius: 5px; background: linear-gradient(90deg, #f4c04a, #ea7a3a); }
+    .panel { position: relative; flex: none; width: 380px; height: 720px; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .45), 0 0 0 1px rgba(255, 255, 255, .12); zoom: 1.08; }
+    .panel iframe { display: block; width: 380px; height: 720px; border: 0; background: #19191b; }
+    .frame.tile { width: 440px; height: 280px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 0 36px; box-sizing: border-box; }
+    .tile .wordmark { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .tile .wordmark svg { width: 56px; height: 56px; }
+    .tile .wordmark b { font-size: 34px; font-weight: 700; letter-spacing: -.4px; }
+    .tile p { margin: 0; font-size: 18px; color: rgba(255, 255, 255, .86); max-width: 370px; }
+    .frame.marquee { width: 1400px; height: 560px; display: flex; align-items: center; gap: 56px; padding: 0 80px; box-sizing: border-box; }
+    .marquee .copy h1 { font-size: 48px; }
+    .marquee .panel { height: 480px; zoom: 1; }
+    .marquee .panel iframe { height: 480px; }
+</style>
+</head>
+<body>
+<script type="module">
+    const params = new URLSearchParams(location.search);
+    const lang = params.get('lang') ?? 'fr';
+    const logo = `<svg viewBox="0 0 128 128" aria-hidden="true"><rect width="128" height="128" rx="28" fill="rgba(255,255,255,.14)"/><rect x="34" y="82" width="60" height="14" rx="7" fill="url(#rates)"/><path d="M22 100 V84 C22 56 40 36 64 36 S106 56 106 84 V100" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="rates" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4c04a"/><stop offset=".55" stop-color="#ea7a3a"/><stop offset="1" stop-color="#d23e36"/></linearGradient></defs></svg>`;
+    const texts = {
+        fr: {
+            tagline: 'Vos tarifs, d’une plateforme à l’autre, d’une année à l’autre.',
+            read: { title: 'Lisez votre calendrier, nuit par nuit', points: ['Les prix d’une année entière, en une grille lisible', 'Exportez-les dans un fichier, importez-les ailleurs', 'Dans votre propre session, sans API ni abonnement'] },
+            plan: { title: 'Prévisualisez avant d’appliquer', points: ['Chaque nuit dans la couleur du tarif qui l’attend', 'Les nuits déjà au bon prix et celles conservées, à part', 'Les règles déduites de l’année source, en détail'] },
+            select: { title: 'Tout appliquer, ou seulement une sélection', points: ['Un clic ou un glisser choisit des nuits sur la grille', 'Le reste s’applique ensuite, sans nouvelle simulation', 'Les prix personnalisés ne sont jamais écrasés sans votre accord'] },
+            apply: { title: 'Enregistrez à vitesse humaine, pause et arrêt à tout moment', points: ['L’extension agit dans la page comme vous le feriez', 'Chaque opération est vérifiée sur le calendrier', 'Le journal garde la trace de tout'] },
+            prefs: { title: 'Reportez une année sur la suivante en suivant les vacances', points: ['Vacances scolaires et jours fériés français, zone par zone', 'Un tarif propre pour le samedi, ou les jours de votre choix', 'Interface en français et en anglais'] },
+        },
+        en: {
+            tagline: 'Bridge your rates across platforms and years.',
+            read: { title: 'Read your calendar, night by night', points: ['A whole year of prices in one readable grid', 'Export them to a file, import them elsewhere', 'In your own session, no API, no subscription'] },
+            plan: { title: 'Preview before you apply', points: ['Every night in the colour of the rate it will get', 'Nights already right, and nights kept as they are, set apart', 'The rules inferred from the source year, in detail'] },
+            select: { title: 'Apply everything, or just a selection', points: ['Click or drag on the grid to pick nights', 'Apply the rest later, without a new preview', 'Customised prices are never overwritten without your say'] },
+            apply: { title: 'Save at a human pace, pause or stop any time', points: ['The extension acts in the page the way you would', 'Every operation is checked against the calendar', 'The log keeps track of everything'] },
+            prefs: { title: 'Carry a year over to the next, following the holidays', points: ['French school and public holidays, zone by zone', 'A separate rate for Saturdays, or the days you choose', 'Interface in English and French'] },
+        },
+    }[lang];
+    const shots = {
+        read: { state: 'empty', scroll: 0 },
+        plan: { state: 'planned', scroll: 560 },
+        select: { state: 'planned&selected', scroll: 760 },
+        apply: { state: 'applied', scroll: 760 },
+        prefs: { state: 'planned', scroll: 0, prefs: true },
+    };
+    const wordmark = `<div class="wordmark">${logo}<b>BnBridge</b></div>`;
+    // L'aperçu injecte son gabarit après le chargement : on attend le panneau,
+    // puis la fin des animations de révélation, avant d'agir dedans.
+    const whenReady = (iframe, action) => iframe.addEventListener('load', () => {
+        const ready = setInterval(() => {
+            if (!iframe.contentDocument.getElementById('preferences')) {
+                return;
+            }
+            clearInterval(ready);
+            setTimeout(() => action(iframe.contentDocument, iframe.contentWindow), 2500);
+        }, 100);
+    });
+    const panel = (state, height) => `<div class="panel"><iframe src="preview.html?state=${state}&dark&lang=${lang}"></iframe></div>`;
+    const tile = params.get('tile');
+    if (tile === 'small') {
+        document.body.innerHTML = `<div class="frame tile">${wordmark}<p>${texts.tagline}</p></div>`;
+    }
+    else if (tile === 'marquee') {
+        document.body.innerHTML = `<div class="frame marquee"><div class="copy">${wordmark}<h1>${texts.tagline}</h1><ul>${texts.plan.points.map((p) => `<li>${p}</li>`).join('')}</ul></div>${panel('planned')}</div>`;
+    }
+    else {
+        const key = shots[params.get('shot')] ? params.get('shot') : 'plan';
+        const shot = shots[key];
+        document.body.innerHTML = `<div class="frame shot"><div class="copy">${wordmark}<h1>${texts[key].title}</h1><ul>${texts[key].points.map((p) => `<li>${p}</li>`).join('')}</ul></div>${panel(shot.state)}</div>`;
+        const iframe = document.querySelector('iframe');
+        whenReady(iframe, (doc, win) => {
+            if (shot.prefs) {
+                doc.getElementById('preferences').open = true;
+            }
+            win.scrollTo(0, shot.scroll);
+        });
+    }
+    if (tile === 'marquee') {
+        whenReady(document.querySelector('iframe'), (doc, win) => win.scrollTo(0, 600));
+    }
+</script>
+</body>
+</html>
