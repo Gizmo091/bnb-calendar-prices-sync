@@ -119,7 +119,7 @@ async function bind(tabId) {
         if (saved.targetYear) {
             $('target-year').value = saved.targetYear;
         }
-        setDays(saved.days, saved.year, 'session précédente');
+        setDays(saved.days, saved.year, 'conservées de la session précédente');
     }
 }
 
@@ -174,7 +174,7 @@ function setDays(days, year, origin) {
     state.year = year;
     $('year').value = year;
     const count = Object.keys(days).length;
-    $('read-summary').textContent = `${count} nuits chargées pour ${year} · ${origin}`;
+    $('read-summary').textContent = `${count} nuits de ${year} ${origin}`;
     renderDays(days, year);
     $('export').disabled = count === 0;
     $('project').disabled = count === 0;
@@ -182,7 +182,7 @@ function setDays(days, year, origin) {
     $('plan').disabled = true;
     $('apply').disabled = true;
     suggestBasePrice(days, year);
-    log(`${count} nuits chargées pour ${year} (${origin})`, 'ok');
+    log(`${count} nuits de ${year} ${origin}`, 'ok');
     persist();
 }
 
@@ -254,7 +254,7 @@ async function readCalendar() {
     log(`Lecture du calendrier du ${from} au ${to}…`);
     try {
         const days = await callAdapter('readCalendar', { from, to });
-        setDays(days, year, 'lecture du site');
+        setDays(days, year, 'lues sur le site, lecture terminée');
     }
     catch (e) {
         log(e.message, 'error');
@@ -291,7 +291,7 @@ async function importJson(file) {
             $('base-price').value = doc.basePrice;
         }
         $('target-year').value = year + 1;
-        setDays(doc.days, year, `import ${file.name}`);
+        setDays(doc.days, year, `importées de ${file.name}`);
     }
     catch (e) {
         log(e.message, 'error');

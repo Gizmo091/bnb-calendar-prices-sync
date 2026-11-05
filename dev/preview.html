@@ -65,7 +65,7 @@
             const [wk, sat] = base[season(d)];
             days[d] = { price: weekday(d) === 6 ? sat : wk, reserved: d >= '2026-02-14' && d <= '2026-02-21' || d >= '2026-08-08' && d <= '2026-08-15' };
         }
-        $('read-summary').textContent = '365 nuits chargées pour 2026 · lecture du site';
+        $('read-summary').textContent = '365 nuits de 2026 lues sur le site, lecture terminée';
         const { levels, min, max } = priceLevels(days);
         const cells = {};
         for (const [date, day] of Object.entries(days)) {
@@ -74,7 +74,7 @@
         renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { state: 'reserved', label: 'réservée' }] });
         $('base-hint').textContent = 'Détecté : 160 € affiché par le site · 160 € sur 213 nuits lointaines (94 %)';
         $('export').disabled = $('project').disabled = $('as-is').disabled = false;
-        log('365 nuits chargées pour 2026 (lecture du site)', 'ok');
+        log('365 nuits de 2026 lues sur le site, lecture terminée', 'ok');
     }
     if (stage === 'planned' || stage === 'applied') {
         const rules = [
