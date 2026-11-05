@@ -85,7 +85,11 @@ forme suit la méthode [unslop](https://github.com/heydamir/unslop) de Damir Sok
 
 ## État
 
-Le cœur métier est testé (`npm test`).
+Le cœur métier, le manifeste et la grille sont testés (`npm test`, sans
+dépendance, avec le lanceur de Node), et `npm run check` vérifie la syntaxe
+de toutes les sources. GitHub Actions lance les deux sur Node 20 et 22 à
+chaque poussée et chaque pull request, puis construit l'archive de
+l'extension, téléchargeable depuis l'exécution.
 
 - **Airbnb** : adaptateur calibré sur le calendrier hôte (`/multicalendar/<id>`)
   en novembre 2026. Lecture par défilement de la liste virtualisée, écriture par
