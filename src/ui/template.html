@@ -1,17 +1,19 @@
 <div class="panel" id="panel">
-  <header id="drag-handle">
+  <header>
     <span class="brand">BnB Calendar Prices Sync</span>
     <span id="site-info" class="meta"></span>
-    <span class="spacer"></span>
-    <button id="collapse" type="button" class="icon" title="Réduire" aria-label="Réduire">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 12h14"/></svg>
-    </button>
-    <button id="close" type="button" class="icon" title="Fermer" aria-label="Fermer">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-    </button>
   </header>
 
   <div class="body" id="body">
+    <div id="unsupported" class="unsupported" hidden>
+      <p>Cet onglet n'est pas pris en charge</p>
+      <p>L'extension travaille sur le calendrier d'une annonce, sur l'un de ces sites :</p>
+      <ul>
+        <li><a href="https://www.airbnb.fr/multicalendar/" target="_blank" rel="noopener">Airbnb</a><span>calendrier hôte</span><span class="url">https://www.airbnb.fr/multicalendar/&lt;id de l'annonce&gt;</span></li>
+        <li><a href="https://www.abritel.fr/p/calendar/" target="_blank" rel="noopener">Abritel / Vrbo</a><span>calendrier propriétaire</span><span class="url">https://www.abritel.fr/p/calendar/&lt;id de l'annonce&gt;</span></li>
+      </ul>
+    </div>
+    <div id="steps">
     <p id="notice" class="notice" hidden></p>
     <section>
       <h2><span class="step">01</span>Lire ou importer les prix</h2>
@@ -62,13 +64,14 @@
       </div>
       <p id="plan-summary" class="hint"></p>
       <div id="plan-grid" class="year-grid" hidden></div>
-      <table id="plan-table" hidden><thead><tr><th>Du</th><th>Au</th><th class="num">Nuits</th><th class="num">Prix</th><th>État</th></tr></thead><tbody></tbody></table>
+      <table id="plan-table" hidden><thead><tr><th>Période</th><th class="num">Nuits</th><th class="num">Prix</th><th>État</th></tr></thead><tbody></tbody></table>
       <details id="skipped-details" hidden>
         <summary>Nuits ignorées</summary>
         <ul id="skipped-list"></ul>
       </details>
     </section>
 
+    </div>
     <section>
       <h2>Journal</h2>
       <pre id="log"></pre>

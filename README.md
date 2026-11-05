@@ -29,8 +29,12 @@ Les vacances scolaires viennent de l'open data de l'Éducation nationale
 1. `chrome://extensions`, activer le mode développeur.
 2. « Charger l'extension non empaquetée » et choisir ce dossier.
 3. Ouvrir le calendrier hôte du site, puis cliquer sur l'icône de l'extension :
-   le panneau s'ouvre par-dessus la page (déplaçable, repliable). Un second clic
-   le ferme. Les prix chargés sont conservés d'une ouverture à l'autre.
+   le panneau s'ouvre dans le panneau latéral de Chrome, à côté de la page, et
+   suit l'onglet actif tant qu'aucune application n'est en cours. Sur un onglet
+   non pris en charge, il le dit. Les prix chargés sont conservés d'une
+   ouverture à l'autre, par annonce.
+
+Chrome 114 ou plus récent (API `sidePanel`).
 
 ## Format JSON
 
@@ -55,9 +59,9 @@ manifest.json
 src/
   core/        logique métier, indépendante du navigateur (testée en Node)
   adapters/    lecture et écriture du calendrier de chaque site
-  content/     script de contenu qui charge l'adaptateur et le panneau
-  ui/          panneau injecté dans la page (Shadow DOM) : gabarit, styles, grille de l'année
-  background.js
+  content/     script de contenu : charge l'adaptateur et répond aux messages du panneau
+  ui/          panneau latéral : page, gabarit, styles, grille de l'année
+  background.js  ouvre le panneau au clic, relaie les API publiques avec cache
 dev/preview.html  aperçu du panneau hors extension (servir le dépôt en HTTP, `?dark`, `?state=…`)
 test/
 ```

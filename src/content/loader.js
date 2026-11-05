@@ -1,6 +1,7 @@
 /**
  * Script de contenu minimal : charge l'adaptateur du site courant en module ES
- * et ouvre ou ferme le panneau dans la page quand l'icône de l'extension est cliquée.
+ * et l'expose au panneau latéral par messages. Le panneau ne touche jamais la
+ * page lui-même : lecture, écriture et détection passent par ici.
  */
 (async () => {
     const { pickAdapter } = await import(chrome.runtime.getURL('src/adapters/index.js'));
@@ -8,12 +9,39 @@
     if (!adapter) {
         return;
     }
-    const { togglePanel } = await import(chrome.runtime.getURL('src/ui/panel.js'));
+    const METHODS = ['readCalendar', 'applyPrice', 'basePrice'];
+
+    async function describe() {
+        const info = await adapter.info();
+        return {
+            ...info,
+            label: adapter.label,
+            supportsWeekdayPattern: adapter.supportsWeekdayPattern === true,
+            calendarUrl: adapter.calendarUrl ?? null,
+            hasBasePrice: typeof adapter.basePrice === 'function',
+        };
+    }
+
     chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-        if (msg?.target !== 'panel') {
+        if (msg?.target !== 'adapter') {
             return false;
         }
-        togglePanel(adapter).then(() => sendResponse({ ok: true }), (e) => sendResponse({ ok: false, error: e.message }));
+        (async () => {
+            try {
+                if (msg.method === 'info') {
+                    sendResponse({ ok: true, result: await describe() });
+                }
+                else if (METHODS.includes(msg.method) && typeof adapter[msg.method] === 'function') {
+                    sendResponse({ ok: true, result: await adapter[msg.method](...(msg.args ?? [])) });
+                }
+                else {
+                    throw new Error(`Méthode inconnue : ${msg.method}`);
+                }
+            }
+            catch (e) {
+                sendResponse({ ok: false, error: e.message });
+            }
+        })();
         return true;
     });
 })();

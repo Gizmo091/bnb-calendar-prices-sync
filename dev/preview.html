@@ -4,44 +4,37 @@
 <meta charset="utf-8">
 <title>Aperçu du panneau</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../src/ui/styles.css">
 <style>
-    body { margin: 0; min-height: 100vh; font: 14px system-ui, sans-serif; background: #fff; color: #222; }
-    body.dark { background: #111; color: #ccc; }
-    .fake { padding: 40px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; max-width: 720px; }
-    .fake div { height: 72px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; font-size: 12px; color: #888; }
-    body.dark .fake div { border-color: #333; color: #666; }
+    /* Le panneau latéral de Chrome fait environ 360 px de large par défaut. */
+    html { background: #888; }
+    body { width: 380px; margin: 0 auto; min-height: 100vh; box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
 </style>
 </head>
 <body>
-<p style="padding: 24px 40px 0">Aperçu du panneau hors extension. Paramètres : <code>?dark</code>, <code>?state=empty|loaded|planned|applied</code>.</p>
-<div class="fake"></div>
 <script type="module">
     import { renderYearGrid, priceLevels, describeDate } from '../src/ui/yearGrid.js';
     import { eachDay, weekday } from '../src/core/index.js';
 
+    // Paramètres : ?dark, ?state=unsupported|empty|loaded|planned|applied
     const params = new URLSearchParams(location.search);
     const dark = params.has('dark');
     const stage = params.get('state') ?? 'applied';
-    if (dark) document.body.classList.add('dark');
-    document.querySelector('.fake').innerHTML = Array.from({ length: 35 }, (_, i) => `<div>${i + 1}<br>160 €</div>`).join('');
-
-    const host = document.createElement('div');
-    const shadow = host.attachShadow({ mode: 'open' });
-    let css = await (await fetch('../src/ui/styles.css')).text();
     if (dark) {
-        const m = css.match(/@media \(prefers-color-scheme: dark\) \{\s*(:host \{[^}]*\})\s*\}/);
-        css += `\n${m[1]}\n.year-grid .cell.sat { box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }`;
+        const css = await (await fetch('../src/ui/styles.css')).text();
+        const m = css.match(/@media \(prefers-color-scheme: dark\) \{\s*(:root \{[^}]*\})\s*\}/);
+        const style = document.createElement('style');
+        style.textContent = `${m[1]}\n.year-grid .cell.sat { box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }`;
+        document.head.append(style);
     }
-    const style = document.createElement('style');
-    style.textContent = css;
-    shadow.append(style);
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = await (await fetch('../src/ui/template.html')).text();
-    shadow.append(wrapper);
-    document.body.append(host);
-    const $ = (id) => shadow.getElementById(id);
+    document.body.innerHTML = await (await fetch('../src/ui/template.html')).text();
+    const $ = (id) => document.getElementById(id);
 
-    $('site-info').textContent = 'Airbnb · annonce 850769363996753698';
+    if (stage === 'unsupported') {
+        $('unsupported').hidden = false;
+        $('steps').hidden = true;
+    }
+    $('site-info').textContent = stage === 'unsupported' ? '' : 'Airbnb · annonce 850769363996753698';
     $('year').value = 2026;
     $('target-year').value = 2027;
     $('base-price').value = 160;
@@ -53,7 +46,7 @@
         line.append(time, document.createTextNode(t));
         $('log').append(line);
     };
-    if (stage === 'empty') {
+    if (stage === 'empty' || stage === 'unsupported') {
         // rien de chargé
     }
     else {
@@ -104,16 +97,16 @@
         $('apply').disabled = false;
         $('plan-summary').textContent = '212 nuits à modifier en 14 opérations · 96 déjà au bon prix · 57 ignorées';
         const ops = [
-            ['2027-02-06', '2027-03-07', 29, 'lun/mar/mer/jeu/ven/dim 220 · sam 398'],
-            ['2027-03-08', '2027-04-09', 33, 'lun/mar/mer/jeu/ven/dim 118 · sam 237'],
-            ['2027-04-10', '2027-04-25', 16, 'lun/mar/mer/jeu/ven/dim 150 · sam 260'],
-            ['2027-07-03', '2027-08-29', 58, 'lun/mar/mer/jeu/ven/dim 178 · sam 355'],
+            ['2027-02-06', '2027-03-07', 29, '<span class="days">autres</span> 220<br><span class="days">sam</span> 398'],
+            ['2027-03-08', '2027-04-09', 33, '<span class="days">autres</span> 118<br><span class="days">sam</span> 237'],
+            ['2027-04-10', '2027-04-25', 16, '<span class="days">autres</span> 150<br><span class="days">sam</span> 260'],
+            ['2027-07-03', '2027-08-29', 58, '<span class="days">autres</span> 178<br><span class="days">sam</span> 355'],
         ];
         const pt = $('plan-table').querySelector('tbody');
         ops.forEach(([f, t, n, p], i) => {
             const tr = document.createElement('tr');
             const st = stage === 'applied' ? (i < 2 ? ['fait', 'state state-done'] : i === 2 ? ['en cours', 'state state-busy'] : ['en attente', 'state']) : ['en attente', 'state'];
-            tr.innerHTML = `<td class="date">${f}</td><td class="date">${t}</td><td class="num">${n}</td><td class="num">${p}</td><td class="${st[1]}">${st[0]}</td>`;
+            tr.innerHTML = `<td class="date"><span>du</span> ${f}<br><span>au</span> ${t}</td><td class="num">${n}</td><td class="num">${p}</td><td class="${st[1]}">${st[0]}</td>`;
             pt.append(tr);
         });
         $('plan-table').hidden = false;

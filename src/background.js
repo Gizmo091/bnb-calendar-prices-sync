@@ -1,29 +1,13 @@
 /**
- * Service worker : au clic sur l'icône, demande à la page courante d'ouvrir
- * ou fermer le panneau. Sert aussi de relais pour les API publiques
- * (vacances scolaires, jours fériés), avec cache dans le stockage local.
+ * Service worker : ouvre le panneau latéral au clic sur l'icône et sert de
+ * relais pour les API publiques (vacances scolaires, jours fériés), avec cache
+ * dans le stockage local.
  */
 import { buildCalendarContext } from './core/holidays.js';
 
 const CACHE_TTL_MS = 7 * 24 * 3600 * 1000;
 
-chrome.action.onClicked.addListener(async (tab) => {
-    try {
-        await chrome.tabs.sendMessage(tab.id, { target: 'panel', action: 'toggle' });
-    }
-    catch {
-        // Pas de script de contenu ici : page hors Airbnb / Abritel, ou page à recharger.
-        // On affiche l'avertissement dans la page ; sur une page où rien ne peut
-        // être injecté (chrome://, boutique), on se rabat sur le badge.
-        try {
-            await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['src/content/notice.js'] });
-        }
-        catch {
-            await chrome.action.setBadgeText({ tabId: tab.id, text: '!' });
-            await chrome.action.setTitle({ tabId: tab.id, title: 'Ouvrez le calendrier hôte Airbnb ou Abritel (rechargez la page si besoin)' });
-        }
-    }
-});
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
 async function getCalendarContext(year) {
     const key = `calendarContext:${year}`;

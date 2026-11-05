@@ -1,11 +1,10 @@
 /*
- * Panneau flottant au-dessus des calendriers Airbnb et Abritel.
+ * Panneau latéral de Chrome, à côté des calendriers Airbnb et Abritel.
  * Chrome graphite et silencieux : une seule couleur d'accent, réservée à
  * l'action d'application et à la grille de l'année, qui est le seul endroit
  * où les prix prennent de la couleur.
  */
-:host {
-    all: initial;
+:root {
     --surface: #ffffff;
     --raised: #f4f4f5;
     --sunken: #fafafa;
@@ -25,7 +24,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    :host {
+    :root {
         --surface: #19191b;
         --raised: #232325;
         --sunken: #141415;
@@ -47,46 +46,48 @@
 
 /* ---------- Panneau ---------- */
 
-.panel {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    width: min(560px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
-    display: flex;
-    flex-direction: column;
-    z-index: 2147483647;
+html, body { margin: 0; padding: 0; }
+body {
+    min-height: 100vh;
     font: 400 13px/20px system-ui, -apple-system, "Segoe UI", sans-serif;
     color: var(--fg);
     background: var(--surface);
-    border: 1px solid var(--hairline);
-    border-radius: 16px;
-    box-shadow: var(--shadow);
     -webkit-font-smoothing: antialiased;
 }
+.panel { display: flex; flex-direction: column; min-height: 100vh; }
 
 header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     display: flex;
     align-items: center;
     gap: 12px;
     height: 48px;
-    padding: 0 12px 0 16px;
+    padding: 0 16px;
+    background: var(--surface);
     border-bottom: 1px solid var(--hairline);
-    cursor: move;
     user-select: none;
     flex: none;
 }
-.panel.collapsed header { border-bottom-color: transparent; }
 .brand { font-weight: 500; white-space: nowrap; }
 .meta { color: var(--fg-3); font: 12px/16px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.spacer { flex: 1; }
 
-.body { overflow: auto; padding: 0 16px 16px; overscroll-behavior: contain; }
+.body { padding: 0 16px 16px; }
 
 section { padding: 16px 0 20px; border-bottom: 1px solid var(--hairline); }
 section:last-child { border-bottom: 0; padding-bottom: 0; }
 h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size: 13px; font-weight: 500; line-height: 20px; }
 .step { font: 12px/16px var(--mono); color: var(--fg-3); font-variant-numeric: tabular-nums; }
+
+.unsupported { padding: 16px 0; }
+.unsupported p { margin: 0 0 12px; }
+.unsupported ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.unsupported li { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 8px; }
+.unsupported li span { color: var(--fg-3); font-size: 12px; line-height: 16px; }
+.unsupported .url { font-family: var(--mono); word-break: break-all; }
+.unsupported a { color: var(--accent-ink); text-decoration: none; font-weight: 500; }
+.unsupported a:hover { text-decoration: underline; }
 
 /* ---------- Texte ---------- */
 
@@ -140,9 +141,6 @@ button:active:not(:disabled) { transform: scale(.98); }
 button:disabled { opacity: .45; cursor: not-allowed; }
 button.primary:not(:disabled) { background: var(--accent); border-color: transparent; color: var(--on-accent); }
 button.primary:hover:not(:disabled) { background: var(--accent-ink); }
-button.icon { width: 28px; height: 28px; padding: 0; border-color: transparent; background: transparent; color: var(--fg-3); }
-button.icon:hover { background: var(--raised); color: var(--fg); border-color: transparent; }
-button.icon svg { width: 16px; height: 16px; }
 label.file input { display: none; }
 
 :is(button, input, summary) { outline: none; }
@@ -152,13 +150,14 @@ label.file input { display: none; }
 
 .year-grid {
     display: grid;
-    grid-template-columns: 32px repeat(31, 1fr);
+    grid-template-columns: 28px repeat(31, minmax(0, 1fr));
     gap: 2px;
     margin-top: 12px;
 }
 .year-grid .month { font: 11px/12px var(--mono); color: var(--fg-3); align-self: center; }
 .year-grid .cell {
     display: block;
+    min-width: 0;
     aspect-ratio: 1;
     border-radius: 2px;
     background: var(--raised);
@@ -205,6 +204,7 @@ th { font-weight: 400; color: var(--fg-3); font-size: 12px; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 td.num { font-family: var(--mono); font-size: 12px; }
 td:last-child, th:last-child { padding-right: 0; }
+td.share { white-space: nowrap; }
 td.share i {
     display: inline-block;
     width: 40px;
@@ -217,8 +217,10 @@ td.share i {
     overflow: hidden;
 }
 td.share i::after { content: ""; position: absolute; inset: 0; width: var(--w); background: var(--fg-3); }
-td.state { color: var(--fg-3); white-space: nowrap; }
+td.state { color: var(--fg-3); }
+td .days { color: var(--fg-3); }
 td.date { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+td.date span { color: var(--fg-3); }
 .state-busy { color: var(--fg); }
 .state-done { color: var(--positive); }
 .state-error { color: var(--negative); }

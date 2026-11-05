@@ -5,8 +5,7 @@
   "description": "Exporte, importe et reporte d'une année sur l'autre les prix du calendrier Airbnb et Abritel.",
   "permissions": [
     "storage",
-    "activeTab",
-    "scripting"
+    "sidePanel"
   ],
   "host_permissions": [
     "https://*.airbnb.fr/*",
@@ -22,6 +21,9 @@
   },
   "action": {
     "default_title": "BnB Calendar Prices Sync"
+  },
+  "side_panel": {
+    "default_path": "src/ui/panel.html"
   },
   "content_scripts": [
     {
@@ -41,8 +43,7 @@
     {
       "resources": [
         "src/adapters/*.js",
-        "src/core/*.js",
-        "src/ui/*"
+        "src/core/*.js"
       ],
       "matches": [
         "https://*.airbnb.fr/*",
