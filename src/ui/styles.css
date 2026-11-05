@@ -78,6 +78,8 @@ header {
 section { padding: 16px 0 20px; border-bottom: 1px solid var(--hairline); }
 section:last-child { border-bottom: 0; padding-bottom: 0; }
 h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size: 13px; font-weight: 500; line-height: 20px; }
+.inline-step h2 { margin: 0; }
+.inline-step .help { margin-left: -4px; }
 .step { font: 12px/16px var(--mono); color: var(--fg-3); font-variant-numeric: tabular-nums; }
 
 .unsupported { padding: 16px 0; }
