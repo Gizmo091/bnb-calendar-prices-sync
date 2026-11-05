@@ -33,6 +33,10 @@ function applySpec(cell, spec) {
 const MONTHS = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin', 'juil', 'aoû', 'sep', 'oct', 'nov', 'déc'];
 const LEVELS = 5;
 
+/**
+ * `legend` liste des entrées `{ label, state?, level?, flags? }` rendues comme
+ * une case, ou `{ scale: [min, max] }` : une réglette des cinq paliers de prix.
+ */
 export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
     el.innerHTML = '';
     el.hidden = false;
@@ -72,6 +76,23 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
         ul.className = 'legend';
         for (const item of legend) {
             const li = document.createElement('li');
+            if (item.scale) {
+                // Échelle de prix : les cinq paliers de l'accent, du plus bas au plus haut.
+                const [min, max] = item.scale;
+                const strip = document.createElement('span');
+                strip.className = 'scale';
+                for (let level = 1; level <= LEVELS; level++) {
+                    const step = document.createElement('i');
+                    step.className = 'cell';
+                    step.dataset.level = String(level);
+                    strip.append(step);
+                }
+                li.className = 'range';
+                li.title = `Prix des nuits, du plus bas (${min} €) au plus haut (${max} €)`;
+                li.append(document.createTextNode(`${min} €`), strip, document.createTextNode(`${max} €`));
+                ul.append(li);
+                continue;
+            }
             const swatch = document.createElement('i');
             swatch.className = 'cell';
             if (item.level !== undefined) {

@@ -302,6 +302,8 @@ label.file input { display: none; }
 }
 .legend li { display: inline-flex; align-items: center; gap: 6px; }
 .legend .cell { width: 10px; height: 10px; aspect-ratio: auto; }
+.legend .scale { display: inline-flex; gap: 2px; }
+.legend .range { gap: 6px; }
 
 /* ---------- Tableaux ---------- */
 

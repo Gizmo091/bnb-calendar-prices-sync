@@ -229,8 +229,7 @@ function renderDays(days, year) {
     }
     const seen = new Set(Object.values(cells).flatMap((c) => c.flags));
     const legend = min === undefined ? [] : [
-        { level: 1, label: `${min} €` },
-        { level: 5, label: `${max} €` },
+        { scale: [min, max] },
         ...(seen.has('reserved') ? [{ flags: ['reserved'], label: 'réservée' }] : []),
         ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
     ];
