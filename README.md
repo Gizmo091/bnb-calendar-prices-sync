@@ -1,5 +1,7 @@
 # BnB Calendar Prices Sync
 
+[![CI](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml)
+
 Extension Chrome (Manifest V3) pour gérer les prix du calendrier d'une location
 saisonnière sur Airbnb et Abritel / Vrbo, sans API ni abonnement : elle agit
 dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
