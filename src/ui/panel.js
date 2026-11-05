@@ -146,6 +146,18 @@ function resetUi() {
         $(id).disabled = true;
     }
     setApply(false, 'Lisez ou importez des prix, puis simulez');
+    $('progress').hidden = true;
+}
+
+/** Barre de progression de l'application, en nuits traitées sur nuits à modifier. */
+function setProgress(doneNights, totalNights, { failed = false } = {}) {
+    const el = $('progress');
+    const percent = totalNights ? Math.round((doneNights / totalNights) * 100) : 0;
+    el.hidden = false;
+    el.classList.toggle('failed', failed);
+    el.setAttribute('aria-valuenow', String(percent));
+    el.querySelector('.track i').style.setProperty('--w', `${percent}%`);
+    el.querySelector('.count').textContent = `${doneNights}/${totalNights} nuits`;
 }
 
 /** Active le bouton d'application, ou l'inactive en disant pourquoi. */
@@ -429,6 +441,7 @@ async function plan() {
         notBefore: today(),
     });
     renderPlan(state.plan);
+    $('progress').hidden = true;
     if (state.plan.ops.length) {
         setApply(true);
     }
@@ -518,18 +531,26 @@ async function apply() {
     setApply(false, 'Application en cours');
     $('plan').disabled = true;
     applying = true;
+    const totalNights = ops.reduce((sum, op) => sum + op.nights, 0);
     let done = 0;
+    let doneNights = 0;
+    let failed = false;
+    setProgress(0, totalNights);
     try {
         for (const op of ops) {
-            $('plan-summary').textContent = `Application en cours : ${done}/${ops.length} opérations, ${describeOp(op)} du ${op.from} au ${op.to}`;
+            $('plan-summary').textContent = `Application en cours : ${describeOp(op)} du ${op.from} au ${op.to}`;
             markOp(op, 'busy');
             try {
                 await callAdapter('applyPrice', op);
                 markOp(op, 'ok');
                 done += 1;
+                doneNights += op.nights;
+                setProgress(doneNights, totalNights);
             }
             catch (e) {
                 markOp(op, 'error');
+                failed = true;
+                setProgress(doneNights, totalNights, { failed: true });
                 log(`Arrêt : ${e.message}`, 'error');
                 break;
             }
@@ -539,7 +560,7 @@ async function apply() {
     finally {
         applying = false;
     }
-    const complete = done === ops.length;
+    const complete = done === ops.length && !failed;
     $('plan-summary').textContent = complete
         ? `${done} opérations appliquées, ${state.plan.changed} nuits au bon prix`
         : `Application interrompue après ${done}/${ops.length} opérations, voir le journal`;

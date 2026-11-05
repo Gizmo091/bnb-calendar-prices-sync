@@ -96,6 +96,14 @@ h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size
 .card .year-grid { margin-top: 8px; }
 .card .row { margin-top: 12px; }
 
+/* ---------- Progression ---------- */
+
+.progress { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.progress .track { flex: 1; height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; }
+.progress .track i { display: block; height: 100%; width: var(--w, 0%); border-radius: 3px; background: var(--accent); transition: width 300ms var(--ease); }
+.progress.failed .track i { background: var(--negative); }
+.progress .count { font: 12px/16px var(--mono); color: var(--fg-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
 /* ---------- Texte ---------- */
 
 .help { position: relative; display: inline-flex; align-self: center; }
