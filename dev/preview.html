@@ -72,7 +72,25 @@
         for (const [date, day] of Object.entries(days)) {
             cells[date] = { level: levels[date], flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [], title: `${describeDate(date)} · ${day.price} €` };
         }
-        renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }] });
+        const legend = [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }];
+        if (stage === 'loaded') {
+            // Import simulé : toutes les nuits se dévoilent une à une, puis la grille finale.
+            const pending = Object.fromEntries(Object.keys(cells).map((d) => [d, { state: 'pending' }]));
+            const grid = renderYearGrid($('read-grid'), 2026, pending);
+            $('read-summary').textContent = 'Chargement de prix-airbnb-2026.bnbprices…';
+            let cursor = performance.now();
+            for (const d of Object.keys(cells).sort()) {
+                cursor = Math.max(cursor, performance.now()) + 5;
+                grid.update(d, cells[d], { delay: cursor - performance.now() });
+            }
+            setTimeout(() => {
+                renderYearGrid($('read-grid'), 2026, cells, { legend });
+                $('read-summary').textContent = '365 nuits de 2026 importées de prix-airbnb-2026.bnbprices';
+            }, cursor - performance.now() + 400);
+        }
+        else {
+            renderYearGrid($('read-grid'), 2026, cells, { legend });
+        }
         $('base-hint').textContent = 'Détecté : 160 €';
         $('export').disabled = $('plan').disabled = false;
         log('365 nuits de 2026 lues sur le site, lecture terminée', 'ok');
@@ -91,6 +109,7 @@
         // Lecture simulée : un mois toutes les 600 ms, révélé case par case.
         const specOf = (d) => d < '2027-02-06' ? { state: 'custom' } : d < '2027-03-08' ? { state: 'diff' } : (d >= '2027-02-13' && d <= '2027-02-20') ? { state: 'ok', flags: ['reserved'] } : { state: 'ok' };
         let cursor = performance.now();
+        grid.setState('2027-01-01', 'next');
         for (let m = 1; m <= 12; m++) {
             setTimeout(() => {
                 $('plan-summary').textContent = `Lecture des prix de 2027 · ${m}/12 mois`;
@@ -100,7 +119,10 @@
                     cursor = Math.max(cursor, performance.now()) + 14;
                     grid.update(d, specOf(d), { delay: cursor - performance.now() });
                 }
-            }, (m - 1) * 600);
+                if (m < 12) {
+                    setTimeout(() => grid.setState(`2027-${String(m + 1).padStart(2, '0')}-01`, 'next'), cursor - performance.now());
+                }
+            }, (m - 1) * 1200);
         }
     }
     if (stage === 'planned' || stage === 'applied') {

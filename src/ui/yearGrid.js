@@ -5,7 +5,7 @@
  *
  * `cells` associe une date ISO à `{ level?, state?, flags?, title? }` :
  * - `level` entre 0 et 1, quantifié en cinq paliers de l'accent ;
- * - `state` parmi ok, diff, custom, pending, busy, error, unknown : la couleur de fond ;
+ * - `state` parmi ok, diff, custom, pending, next, busy, error, unknown : la couleur de fond ;
  * - `flags` parmi reserved, blocked, past : des marques qui se superposent
  *   à la couleur (hachures, atténuation) sans la remplacer ;
  * - `title` est l'infobulle de la case.

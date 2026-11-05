@@ -209,18 +209,23 @@ function setDays(days, year, origin) {
     persist();
 }
 
-/** Grille de l'année chargée : un palier d'accent par niveau de prix, les nuits réservées hachurées. */
+/** Apparence d'une nuit chargée : un palier d'accent par niveau de prix, réservée ou bloquée par-dessus. */
+function dayCell(date, day, levels) {
+    const price = typeof day.price === 'number' ? `${day.price} €` : 'prix inconnu';
+    const notes = [day.reserved ? 'réservée' : '', day.available === false ? 'bloquée' : '', day.promotion ? 'promotion' : ''].filter(Boolean);
+    return {
+        level: levels[date],
+        flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [],
+        title: `${describeDate(date)} · ${price}${notes.length ? ` · ${notes.join(', ')}` : ''}`,
+    };
+}
+
+/** Grille de l'année chargée, avec sa légende. */
 function renderDays(days, year) {
     const { levels, min, max } = priceLevels(days);
     const cells = {};
     for (const [date, day] of Object.entries(days)) {
-        const price = typeof day.price === 'number' ? `${day.price} €` : 'prix inconnu';
-        const flags = [day.reserved ? 'réservée' : '', day.available === false ? 'bloquée' : '', day.promotion ? 'promotion' : ''].filter(Boolean);
-        cells[date] = {
-            level: levels[date],
-            flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [],
-            title: `${describeDate(date)} · ${price}${flags.length ? ` · ${flags.join(', ')}` : ''}`,
-        };
+        cells[date] = dayCell(date, day, levels);
     }
     const seen = new Set(Object.values(cells).flatMap((c) => c.flags));
     const legend = min === undefined ? [] : [
@@ -230,6 +235,27 @@ function renderDays(days, year) {
         ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
     ];
     renderYearGrid($('read-grid'), year, cells, { legend });
+}
+
+/** Grille de l'année en attente de lecture, affichée dans l'encart des prix chargés. */
+function pendingReadGrid(year) {
+    const { from, to } = yearBounds(year);
+    const cells = Object.fromEntries(eachDay(from, to).map((d) => [d, { state: 'pending', title: `${describeDate(d)} · en attente` }]));
+    $('read-result').hidden = false;
+    $('export').disabled = true;
+    return renderYearGrid($('read-grid'), year, cells);
+}
+
+/**
+ * Dévoile des nuits une à une dans la grille, avec les niveaux de prix connus
+ * à cet instant ; la grille finale, rendue d'un bloc, fixera les nuances.
+ */
+async function revealDays(grid, days, dates, reveal) {
+    const { levels } = priceLevels(days);
+    for (const date of dates) {
+        grid.update(date, dayCell(date, days[date], levels), { delay: reveal() });
+    }
+    await reveal.settled();
 }
 
 /**
@@ -274,16 +300,31 @@ async function suggestBasePrice(days, year) {
     persist();
 }
 
+/** Lecture du site mois par mois, la grille se dévoilant au fil des réponses. */
 async function readCalendar() {
     const year = Number($('year').value);
-    const { from, to } = yearBounds(year);
-    log(`Lecture du calendrier du ${from} au ${to}…`);
+    const months = monthRanges(year);
+    log(`Lecture du calendrier de ${year}…`);
+    $('read').disabled = true;
     try {
-        const days = await callAdapter('readCalendar', { from, to });
+        const grid = pendingReadGrid(year);
+        const reveal = revealQueue();
+        const days = {};
+        for (const [i, range] of months.entries()) {
+            $('read-summary').textContent = `Lecture des prix de ${year} · ${i}/${months.length} mois`;
+            grid.setState(range.from, 'next');
+            const chunk = await callAdapter('readCalendar', range);
+            Object.assign(days, chunk);
+            await revealDays(grid, days, Object.keys(chunk).sort(), reveal);
+        }
         setDays(days, year, 'lues sur le site, lecture terminée');
     }
     catch (e) {
         log(e.message, 'error');
+        $('read-summary').textContent = 'La lecture a échoué, voir le journal';
+    }
+    finally {
+        $('read').disabled = false;
     }
 }
 
@@ -317,6 +358,9 @@ async function importJson(file) {
             $('base-price').value = doc.basePrice;
         }
         $('target-year').value = year + 1;
+        const grid = pendingReadGrid(year);
+        $('read-summary').textContent = `Chargement de ${file.name}…`;
+        await revealDays(grid, doc.days, Object.keys(doc.days).sort(), revealQueue(IMPORT_REVEAL_STEP_MS));
         setDays(doc.days, year, `importées de ${file.name}`);
     }
     catch (e) {
@@ -505,6 +549,7 @@ async function plan() {
     log(`Lecture des prix actuels de ${year} pour comparaison…`);
     for (const [i, range] of months.entries()) {
         $('plan-summary').textContent = `Lecture des prix de ${year} · ${i}/${months.length} mois`;
+        grid.setState(range.from, 'next');
         let chunk;
         let failed = false;
         try {
@@ -547,16 +592,17 @@ async function plan() {
 }
 
 const REVEAL_STEP_MS = 14;
+const IMPORT_REVEAL_STEP_MS = 5;
 
 /**
  * File de révélation : chaque appel réserve le créneau suivant, à partir de
  * maintenant ou de la fin du précédent, pour que les cases se dévoilent une à
  * une sans à-coup d'un mois à l'autre. `settled()` attend la fin de la file.
  */
-function revealQueue() {
+function revealQueue(step = REVEAL_STEP_MS) {
     let cursor = performance.now();
     const next = () => {
-        cursor = Math.max(cursor, performance.now()) + REVEAL_STEP_MS;
+        cursor = Math.max(cursor, performance.now()) + step;
         return cursor - performance.now();
     };
     next.settled = () => new Promise((resolve) => setTimeout(resolve, Math.max(0, cursor - performance.now())));

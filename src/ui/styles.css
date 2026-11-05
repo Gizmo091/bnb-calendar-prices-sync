@@ -256,7 +256,9 @@ label.file input { display: none; }
 .cell[data-state="ok"] { background-color: var(--accent); }
 .cell[data-state="diff"] { background-color: color-mix(in oklab, var(--fg) 18%, var(--raised)); }
 .cell[data-state="custom"] { background-color: color-mix(in oklab, var(--fg) 55%, var(--raised)); }
-.cell[data-state="pending"] { background-color: var(--raised); animation: busy 900ms var(--ease) infinite alternate; }
+.cell[data-state="pending"] { background-color: var(--raised); }
+/* La prochaine nuit à lire respire le temps que le site réponde. */
+.cell[data-state="next"] { background-color: color-mix(in oklab, var(--accent) 45%, var(--raised)); animation: breathe 1400ms ease-in-out infinite; }
 .cell[data-state="busy"] { background-color: color-mix(in oklab, var(--accent) 60%, var(--raised)); animation: busy 900ms var(--ease) infinite alternate; }
 .cell[data-state="error"] { background-color: var(--negative); }
 .cell[data-state="unknown"] { background-color: transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
@@ -270,6 +272,10 @@ label.file input { display: none; }
     .cell[data-blocked] { --cross: rgba(255, 255, 255, .4); }
 }
 @keyframes busy { to { opacity: .4; } }
+@keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: .7; }
+    45% { transform: scale(1.45); opacity: 1; }
+}
 /* Révélation d'une case : elle garde l'air d'attente jusqu'à son tour, puis prend sa couleur d'un petit bond. */
 .year-grid .cell.reveal { animation: reveal 320ms var(--ease) backwards; }
 @keyframes reveal {
@@ -278,7 +284,7 @@ label.file input { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
     .year-grid .cell.reveal { animation: none; }
-    .cell[data-state="pending"] { animation: none; opacity: .6; }
+    .cell[data-state="next"] { animation: none; }
 }
 /* Pastille de légende d'une marque seule : les hachures sur fond vide. */
 .legend .cell:not([data-state]):not([data-level]) { background-color: transparent; }
