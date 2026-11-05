@@ -7,7 +7,7 @@
  * Les appels aux API publiques passent par le service worker (CORS, cache).
  */
 import {
-    yearBounds, today, yearOf,
+    yearBounds, today, yearOf, addMonths,
     labelYear, describeRuleKey,
     inferRules, generateYear,
     detectBasePrice, planUpdates,
@@ -17,6 +17,10 @@ import {
 import { renderYearGrid, priceLevels, describeDate } from './yearGrid.js';
 
 const HOST_ID = 'bnb-calendar-prices-sync';
+/** Fenêtre lue sur le site pour trouver le prix de base : au-delà de l'horizon de réservation. */
+const FAR_FROM_MONTHS = 18;
+const FAR_TO_MONTHS = 24;
+const CONFIDENT_SHARE = 0.9;
 
 const SKIP_LABELS = {
     custom: 'déjà personnalisée',
@@ -140,23 +144,45 @@ async function mountPanel(adapter) {
         renderYearGrid($('read-grid'), year, cells, { legend });
     }
 
+    /**
+     * Le prix de base est celui qu'affichent les nuits de fin de calendrier,
+     * pas encore ouvertes à la réservation et donc jamais personnalisées :
+     * on lit sur le site une fenêtre lointaine (de 18 à 24 mois) et on prend
+     * le prix dominant. À défaut, le panneau Tarification du site, puis les
+     * nuits chargées.
+     */
     async function suggestBasePrice(days, year) {
         const hints = [];
+        let confident = null;
+        const farFrom = addMonths(today(), FAR_FROM_MONTHS);
+        const farTo = addMonths(today(), FAR_TO_MONTHS);
+        try {
+            const farDays = await adapter.readCalendar({ from: farFrom, to: farTo });
+            const far = detectBasePrice(farDays, { horizonMonths: 0, from: farFrom });
+            if (far.price !== null) {
+                hints.push(`${far.price} € sur ${far.samples} nuits de fin de calendrier (${Math.round(far.share * 100)} %)`);
+                if (far.share >= CONFIDENT_SHARE) {
+                    confident = far.price;
+                }
+            }
+        }
+        catch (e) {
+            log(`Fin de calendrier illisible (${e.message}), prix de base estimé sur les nuits chargées`, 'error');
+        }
         const fromSite = adapter.basePrice ? await adapter.basePrice().catch(() => null) : null;
         if (fromSite) {
             hints.push(`${fromSite} € affiché par le site`);
         }
-        const far = detectBasePrice(days);
-        const near = detectBasePrice(days, { horizonMonths: 0, from: `${year}-01-01` });
-        const pick = far.samples ? far : near;
-        if (pick.price !== null) {
-            hints.push(`${pick.price} € sur ${pick.samples} nuits${far.samples ? ' lointaines' : ''} (${Math.round(pick.share * 100)} %)`);
+        const loaded = detectBasePrice(days, { horizonMonths: 0, from: `${year}-01-01` });
+        if (confident === null && fromSite === null && loaded.price !== null) {
+            hints.push(`${loaded.price} € le plus fréquent sur les ${loaded.samples} nuits chargées (${Math.round(loaded.share * 100)} %), à vérifier`);
         }
-        const suggested = fromSite ?? pick.price;
-        if (suggested !== null && !$('base-price').value) {
+        const suggested = confident ?? fromSite ?? loaded.price;
+        if (confident !== null || (suggested !== null && !$('base-price').value)) {
             $('base-price').value = suggested;
         }
         $('base-hint').textContent = hints.length ? `Détecté : ${hints.join(' · ')}` : 'Prix de base introuvable, à saisir';
+        persist();
     }
 
     async function readCalendar() {
