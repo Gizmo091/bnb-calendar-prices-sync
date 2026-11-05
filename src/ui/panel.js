@@ -98,6 +98,7 @@ async function bind(tabId) {
     state = {
         site: info.site,
         listingId: info.listingId,
+        listingName: info.name ?? null,
         year: null,
         days: null,
         rules: null,
@@ -106,16 +107,19 @@ async function bind(tabId) {
         plan: null,
         planGrid: null,
     };
-    $('site-info').textContent = `${info.label}${info.listingId ? ` · annonce ${info.listingId}` : ''}${info.calibrated ? '' : ' · adaptateur non calibré'}`;
+    const listing = describeListing(info.listingId, info.name);
+    $('site-info').textContent = `${info.label}${listing ? ` · ${listing}` : ''}${info.calibrated ? '' : ' · adaptateur non calibré'}`;
+    $('site-info').title = $('site-info').textContent;
     if (!info.listingId) {
         $('notice').innerHTML = `Cette page n'est pas le calendrier d'une annonce. Ouvrez-le pour lire ou modifier les prix : <code>${info.calendarUrl ?? ''}</code>`;
         $('notice').hidden = false;
         $('read').disabled = true;
     }
-    log(`Onglet lié : ${info.label}${info.listingId ? ` · annonce ${info.listingId}` : ''}`);
+    log(`Onglet lié : ${info.label}${listing ? ` · ${listing}` : ''}`);
 
-    const saved = (await chrome.storage.local.get(storageKey))[storageKey];
-    if (saved?.days) {
+    // Les prix conservés ne reviennent que sur l'annonce où ils ont été chargés.
+    const saved = info.listingId ? (await chrome.storage.local.get(storageKey))[storageKey] : null;
+    if (saved?.days && saved.site === info.site && saved.listingId === info.listingId) {
         if (saved.basePrice) {
             $('base-price').value = saved.basePrice;
         }
@@ -137,6 +141,8 @@ function resetUi() {
     $('read-summary').textContent = '';
     $('read-grid').hidden = true;
     $('read-result').hidden = true;
+    $('read-notice').hidden = true;
+    lockSteps(true);
     $('base-hint').textContent = '';
     $('rules-details').hidden = true;
     $('plan-summary').textContent = '';
@@ -177,17 +183,35 @@ function log(message, level = 'info') {
 }
 
 async function persist() {
-    if (!storageKey) {
+    if (!storageKey || !state?.listingId) {
         return;
     }
     await chrome.storage.local.set({
         [storageKey]: {
+            site: state.site,
+            listingId: state.listingId,
             year: state.year,
             days: state.days,
             basePrice: Number($('base-price').value) || null,
             targetYear: Number($('target-year').value) || null,
         },
     });
+}
+
+/** Les étapes à partir du prix de base n'ont de sens qu'avec des prix chargés. */
+function lockSteps(locked) {
+    $('after-read').classList.toggle('locked', locked);
+    $('after-read').inert = locked;
+}
+
+const SITE_LABELS = { airbnb: 'Airbnb', abritel: 'Abritel' };
+
+/** « Nom de l'annonce » ou « annonce 123 », selon ce que le site a donné. */
+function describeListing(listingId, name) {
+    if (name) {
+        return name;
+    }
+    return listingId ? `annonce ${listingId}` : '';
 }
 
 /* ---------- 1. Lecture, export, import ---------- */
@@ -198,6 +222,7 @@ function setDays(days, year, origin) {
     $('year').value = year;
     const count = Object.keys(days).length;
     $('read-summary').textContent = `${count} nuits de ${year} ${origin}`;
+    lockSteps(count === 0);
     $('read-result').hidden = false;
     syncMode();
     renderDays(days, year);
@@ -331,6 +356,7 @@ function exportJson() {
     const doc = createExport({
         site: state.site,
         listingId: state.listingId,
+        listingName: state.listingName,
         basePrice: Number($('base-price').value) || null,
         days: state.days,
     });
@@ -361,6 +387,13 @@ async function importJson(file) {
         $('read-summary').textContent = `Chargement de ${file.name}…`;
         await revealDays(grid, doc.days, Object.keys(doc.days).sort(), revealQueue(IMPORT_REVEAL_STEP_MS));
         setDays(doc.days, year, `importées de ${file.name}`);
+        // Un fichier d'une autre annonce est légitime (transfert entre sites), mais doit se voir.
+        if (doc.listingId && (doc.site !== state.site || doc.listingId !== state.listingId)) {
+            const origin = `${SITE_LABELS[doc.site] ?? doc.site} · ${describeListing(doc.listingId, doc.listingName)}`;
+            $('read-notice').textContent = `Ces prix viennent d'une autre annonce : ${origin}. Vérifiez que c'est voulu avant d'enregistrer sur le site.`;
+            $('read-notice').hidden = false;
+            log(`Prix importés d'une autre annonce : ${origin}`, 'error');
+        }
     }
     catch (e) {
         log(e.message, 'error');

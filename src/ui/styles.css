@@ -178,6 +178,9 @@ th button.info svg { width: 14px; height: 14px; }
 
 .notice { margin: 16px 0 0; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--raised); color: var(--fg-2); }
 .notice code { font: 12px/16px var(--mono); color: var(--fg); }
+.card .notice { margin-top: 12px; background: var(--surface); }
+/* Étapes inaccessibles tant qu'aucun prix n'est chargé. */
+.locked { opacity: .5; pointer-events: none; transition: opacity 240ms var(--ease); }
 
 .hint { margin: 8px 0 0; color: var(--fg-2); font-size: 13px; line-height: 20px; }
 .hint:empty { display: none; }

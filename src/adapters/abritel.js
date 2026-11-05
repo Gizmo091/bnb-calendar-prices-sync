@@ -216,7 +216,10 @@ export default {
 
     async info() {
         const listingId = location.pathname.match(/\/p\/calendar\/([\d.]+)/)?.[1] ?? null;
-        return { site: SITE, listingId, url: location.href, calibrated: CALIBRATED };
+        // Le bouton de choix d'hébergement, en tête de page, affiche le nom puis la référence et l'adresse.
+        const picker = document.querySelector('button[aria-label="Sélectionner un hébergement"]');
+        const name = picker ? [...picker.querySelectorAll('*')].find((e) => e.children.length === 0 && e.textContent.trim())?.textContent.trim() ?? null : null;
+        return { site: SITE, listingId, name, url: location.href, calibrated: CALIBRATED };
     },
 
     async basePrice() {

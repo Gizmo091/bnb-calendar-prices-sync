@@ -5,16 +5,17 @@ export const FORMAT_VERSION = 1;
 /**
  * Format d'échange, commun à tous les sites :
  * {
- *   version: 1, site: 'airbnb', listingId: '…', currency: 'EUR',
+ *   version: 1, site: 'airbnb', listingId: '…', listingName: '…', currency: 'EUR',
  *   exportedAt: ISO 8601, basePrice: 150,
  *   days: { 'YYYY-MM-DD': { price: 180, custom: true, available: true } }
  * }
  */
-export function createExport({ site, listingId, currency = 'EUR', basePrice = null, days }) {
+export function createExport({ site, listingId, listingName = null, currency = 'EUR', basePrice = null, days }) {
     return {
         version: FORMAT_VERSION,
         site,
         listingId,
+        listingName,
         currency,
         exportedAt: new Date().toISOString(),
         basePrice,

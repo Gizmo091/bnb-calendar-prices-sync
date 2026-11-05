@@ -40,7 +40,9 @@ Les vacances scolaires viennent de l'open data de l'Éducation nationale
    le panneau s'ouvre dans le panneau latéral de Chrome, à côté de la page, et
    suit l'onglet actif tant qu'aucune application n'est en cours. Sur un onglet
    non pris en charge, il le dit. Les prix chargés sont conservés d'une
-   ouverture à l'autre, par annonce.
+   ouverture à l'autre, et ne reviennent que sur l'annonce où ils ont été
+   chargés ; les étapes suivantes restent inaccessibles tant qu'aucun prix
+   n'est chargé. Un fichier importé venant d'une autre annonce est signalé.
 
 Chrome 114 ou plus récent (API `sidePanel`).
 
@@ -53,6 +55,7 @@ Le fichier `prix-<site>-<année>.bnbprices` contient du JSON :
   "version": 1,
   "site": "airbnb",
   "listingId": "123456",
+  "listingName": "Chalet avec vue",
   "currency": "EUR",
   "exportedAt": "2026-11-04T10:00:00.000Z",
   "basePrice": 150,

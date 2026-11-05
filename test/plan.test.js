@@ -47,8 +47,9 @@ test('detectBasePrice regarde au-delà de l\'horizon', () => {
 });
 
 test('validateExport et scalePrices', () => {
-    const doc = createExport({ site: 'airbnb', listingId: '1', days: { '2027-01-01': { price: 100 } } });
+    const doc = createExport({ site: 'airbnb', listingId: '1', listingName: 'Chalet', days: { '2027-01-01': { price: 100 } } });
     assert.deepEqual(validateExport(doc), []);
+    assert.equal(doc.listingName, 'Chalet');
     assert.ok(validateExport({ version: 1, days: { '2027-02-30': { price: 1 } } }).length);
     assert.ok(validateExport({ version: 1, days: { '2027-01-01': { price: -1 } } }).length);
     assert.equal(scalePrices(doc.days, 1.07, 5)['2027-01-01'].price, 105);

@@ -243,7 +243,9 @@ export default {
 
     async info() {
         const listingId = location.pathname.match(/\/multicalendar\/(\d+)/)?.[1] ?? null;
-        return { site: SITE, listingId, url: location.href, calibrated: CALIBRATED };
+        // Le titre de l'onglet porte le nom de l'annonce : « Modifier le calendrier pour <nom> - Airbnb ».
+        const name = document.title.match(/^(?:Modifier le calendrier pour|Edit calendar for)\s+(.+?)\s+-\s+Airbnb$/)?.[1] ?? null;
+        return { site: SITE, listingId, name, url: location.href, calibrated: CALIBRATED };
     },
 
     /** Prix de base affiché dans le panneau « Tarification » (hors sélection). */

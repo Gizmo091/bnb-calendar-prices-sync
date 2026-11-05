@@ -34,7 +34,7 @@
         $('unsupported').hidden = false;
         $('steps').hidden = true;
     }
-    $('site-info').textContent = stage === 'unsupported' ? '' : 'Airbnb · annonce 850769363996753698';
+    $('site-info').textContent = stage === 'unsupported' ? '' : 'Airbnb · Chalet avec vue sur le Grand Bec et Courchevel';
     $('year').value = 2026;
     $('target-year').value = 2027;
     $('base-price').value = 160;
@@ -47,9 +47,11 @@
         $('log').append(line);
     };
     if (stage === 'empty' || stage === 'unsupported') {
-        // rien de chargé
+        // rien de chargé : les étapes suivantes restent verrouillées
     }
     else {
+        $('after-read').classList.remove('locked');
+        $('after-read').inert = false;
         // année 2026 : prix par saison, samedi plus cher
         const days = {};
         const season = (d) => {
