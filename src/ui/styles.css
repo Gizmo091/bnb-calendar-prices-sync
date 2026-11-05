@@ -91,6 +91,11 @@ h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size
 .unsupported a { color: var(--accent-ink); text-decoration: none; font-weight: 500; }
 .unsupported a:hover { text-decoration: underline; }
 
+.card { margin-top: 12px; padding: 12px; border: 1px solid var(--hairline); border-radius: 12px; }
+.card .hint { margin: 0; }
+.card .year-grid { margin-top: 8px; }
+.card .row { margin-top: 12px; }
+
 /* ---------- Texte ---------- */
 
 .help { position: relative; display: inline-flex; align-self: center; }

@@ -132,6 +132,7 @@ function resetUi() {
     $('read').disabled = false;
     $('read-summary').textContent = '';
     $('read-grid').hidden = true;
+    $('read-result').hidden = true;
     $('base-hint').textContent = '';
     $('rules-details').hidden = true;
     $('plan-summary').textContent = '';
@@ -175,6 +176,7 @@ function setDays(days, year, origin) {
     $('year').value = year;
     const count = Object.keys(days).length;
     $('read-summary').textContent = `${count} nuits de ${year} ${origin}`;
+    $('read-result').hidden = false;
     renderDays(days, year);
     $('export').disabled = count === 0;
     $('project').disabled = count === 0;
