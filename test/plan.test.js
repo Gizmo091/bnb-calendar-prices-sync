@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { toRanges, toWeekdayRanges, priceForDate, describeOp } from '../src/core/ranges.js';
 import { planUpdates } from '../src/core/plan.js';
 import { detectBasePrice } from '../src/core/basePrice.js';
-import { validateExport, createExport, scalePrices } from '../src/core/schema.js';
+import { validateExport, createExport, scalePrices, exportFileName } from '../src/core/schema.js';
 
 test('toRanges fusionne les nuits contiguës de même prix', () => {
     const ranges = toRanges({ '2027-02-06': 220, '2027-02-07': 220, '2027-02-08': 220, '2027-02-10': 220, '2027-02-11': 300 });
@@ -85,4 +85,11 @@ test('toWeekdayRanges coupe quand un jour de la semaine change de prix', () => {
     const weekly = toWeekdayRanges({ '2027-07-05': 100, '2027-07-06': 100, '2027-07-07': 100, '2027-07-08': 100, '2027-07-09': 100, '2027-07-10': 100, '2027-07-11': 100, '2027-07-12': 100, '2027-07-13': 120 });
     assert.equal(weekly.length, 2, 'le mardi 13 à 120 contredit le mardi 6 à 100');
     assert.equal(weekly[1].from, '2027-07-13');
+});
+
+test('exportFileName simplifie le nom de l\'annonce, ou reprend son identifiant', () => {
+    const base = { site: 'airbnb', listingId: '850769363996753698', year: 2027, extension: '.bnbprices' };
+    assert.equal(exportFileName({ ...base, listingName: 'Chalet avec vue sur le Grand Bec & Courchevel' }), 'prix-airbnb-chalet-avec-vue-sur-le-grand-bec-courchevel-2027.bnbprices');
+    assert.equal(exportFileName({ ...base, listingName: null }), 'prix-airbnb-850769363996753698-2027.bnbprices');
+    assert.equal(exportFileName({ site: 'abritel', listingId: '731.2733329.2910262', listingName: '  ', year: 2027, extension: '.bnbprices' }), 'prix-abritel-731-2733329-2910262-2027.bnbprices');
 });

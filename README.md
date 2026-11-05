@@ -50,7 +50,8 @@ Chrome 114 ou plus récent (API `sidePanel`).
 
 ## Format du fichier de prix
 
-Le fichier `prix-<site>-<année>.bnbprices` contient du JSON :
+Le fichier `prix-<site>-<annonce>-<année>.bnbprices`, où l'annonce est son nom
+simplifié ou à défaut son identifiant, contient du JSON :
 
 ```json
 {

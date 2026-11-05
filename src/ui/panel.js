@@ -12,7 +12,7 @@ import {
     labelYear, describeRuleKey,
     inferRules, generateYear,
     detectBasePrice, planUpdates,
-    createExport, validateExport, scalePrices,
+    createExport, validateExport, scalePrices, exportFileName,
     describeOp, eachDay,
 } from '../core/index.js';
 import { renderYearGrid, priceLevels, describeDate } from './yearGrid.js';
@@ -364,7 +364,7 @@ function exportJson() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `prix-${doc.site}-${state.year}${FILE_EXTENSION}`;
+    a.download = exportFileName({ site: doc.site, listingId: doc.listingId, listingName: doc.listingName, year: state.year, extension: FILE_EXTENSION });
     a.click();
     URL.revokeObjectURL(url);
     log(`Export ${a.download}`, 'ok');

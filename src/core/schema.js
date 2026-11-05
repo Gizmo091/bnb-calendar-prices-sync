@@ -58,3 +58,21 @@ export function scalePrices(days, factor, rounding = 1) {
     }
     return out;
 }
+
+/**
+ * Nom de fichier d'un export : `prix-<site>-<annonce>-<année>.bnbprices`,
+ * l'annonce étant son nom simplifié (sans accent ni ponctuation, en
+ * minuscules, 60 caractères au plus), à défaut son identifiant.
+ */
+export function exportFileName({ site, listingId, listingName, year, extension }) {
+    const slug = (listingName ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 60)
+        .replace(/-+$/, '');
+    const listing = slug || (listingId ? String(listingId).replace(/[^a-z0-9]+/gi, '-') : '');
+    return ['prix', site, listing, year].filter(Boolean).join('-') + extension;
+}
