@@ -23,11 +23,13 @@
         <label class="file">Importer des prix <input id="import" type="file" accept=".bnbprices,.json,application/json"></label>
       </div>
       <div id="read-result" class="card" hidden>
-        <p id="read-summary" class="hint"></p>
-        <div id="read-grid" class="year-grid" hidden></div>
-        <div class="row">
-          <button id="export" type="button" disabled>Exporter les prix</button>
+        <div class="card-head">
+          <p id="read-summary" class="hint"></p>
+          <button id="export" type="button" class="icon" disabled title="Exporter les prix dans un fichier" aria-label="Exporter les prix dans un fichier">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 19h14"/></svg>
+          </button>
         </div>
+        <div id="read-grid" class="year-grid" hidden></div>
       </div>
     </section>
 

@@ -94,7 +94,11 @@ h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size
 .card { margin-top: 12px; padding: 12px; border: 1px solid var(--hairline); border-radius: 12px; }
 .card .hint { margin: 0; }
 .card .year-grid { margin-top: 8px; }
-.card .row { margin-top: 12px; }
+.card-head { display: flex; align-items: flex-start; gap: 8px; }
+.card-head .hint { flex: 1; }
+button.icon { width: 28px; height: 28px; padding: 0; margin: -4px -4px 0 0; border-color: transparent; background: transparent; color: var(--fg-3); }
+button.icon:hover:not(:disabled) { background: var(--raised); color: var(--fg); border-color: transparent; }
+button.icon svg { width: 16px; height: 16px; }
 
 /* ---------- Progression ---------- */
 
