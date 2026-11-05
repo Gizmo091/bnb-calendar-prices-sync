@@ -3,13 +3,33 @@
  * C'est le seul endroit du panneau qui porte de la couleur : le niveau de
  * prix (teinte de l'accent) ou l'état d'une nuit dans le plan.
  *
- * `cells` associe une date ISO à `{ level?, state?, title? }` :
+ * `cells` associe une date ISO à `{ level?, state?, flags?, title? }` :
  * - `level` entre 0 et 1, quantifié en cinq paliers de l'accent ;
- * - `state` parmi pending, done, error, unchanged, custom, reserved, past, unknown ;
+ * - `state` parmi ok, diff, busy, error, unknown : la couleur de fond ;
+ * - `flags` parmi reserved, blocked, past : des marques qui se superposent
+ *   à la couleur (hachures, atténuation) sans la remplacer ;
  * - `title` est l'infobulle de la case.
  */
 import { eachDay, yearBounds, weekday } from '../core/index.js';
 
+const FLAGS = ['reserved', 'blocked', 'past'];
+
+function applySpec(cell, spec) {
+    if (typeof spec.level === 'number') {
+        cell.dataset.level = String(Math.min(LEVELS, 1 + Math.round(spec.level * (LEVELS - 1))));
+    }
+    if (spec.state) {
+        cell.dataset.state = spec.state;
+    }
+    for (const flag of spec.flags ?? []) {
+        if (FLAGS.includes(flag)) {
+            cell.dataset[flag] = '';
+        }
+    }
+    if (spec.title) {
+        cell.title = spec.title;
+    }
+}
 const MONTHS = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin', 'juil', 'aoû', 'sep', 'oct', 'nov', 'déc'];
 const LEVELS = 5;
 
@@ -39,15 +59,7 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
         }
         const c = cells[date];
         if (c) {
-            if (typeof c.level === 'number') {
-                cell.dataset.level = String(Math.min(LEVELS, 1 + Math.round(c.level * (LEVELS - 1))));
-            }
-            if (c.state) {
-                cell.dataset.state = c.state;
-            }
-            if (c.title) {
-                cell.title = c.title;
-            }
+            applySpec(cell, c);
         }
         else {
             cell.dataset.state = 'unknown';
@@ -65,9 +77,7 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
             if (item.level !== undefined) {
                 swatch.dataset.level = String(item.level);
             }
-            if (item.state) {
-                swatch.dataset.state = item.state;
-            }
+            applySpec(swatch, { ...item, level: undefined });
             li.append(swatch, document.createTextNode(item.label));
             ul.append(li);
         }

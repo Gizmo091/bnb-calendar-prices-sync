@@ -17,9 +17,11 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
   prix de base sont modifiées. Le prix de base est détecté automatiquement sur
   les nuits lointaines du calendrier et doit être confirmé par vous.
 - **Simulation obligatoire** avant application : la projection et la
-  comparaison au calendrier cible se font d'un seul geste, et la liste exacte
-  des plages et des prix est affichée, avec les nuits ignorées et la raison ;
-  les règles déduites de l'année source restent consultables en détail.
+  comparaison au calendrier cible se font d'un seul geste. Une grille de
+  l'année montre chaque nuit au bon prix ou à un prix différent, avec les
+  nuits réservées et passées marquées par-dessus, et se met à jour pendant
+  l'application ; les nuits ignorées et les règles déduites de l'année source
+  restent consultables en détail.
 - **Transfert entre plateformes** : « Appliquer tels quels » reprend un fichier
   exporté d'un site sur l'autre, pour la même année, avec un coefficient et un
   arrondi optionnels pour ajuster le prix.

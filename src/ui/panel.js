@@ -13,7 +13,7 @@ import {
     inferRules, generateYear,
     detectBasePrice, planUpdates,
     createExport, validateExport, scalePrices,
-    describeOp, eachDay, weekday, WEEKDAY_NAMES,
+    describeOp, eachDay,
 } from '../core/index.js';
 import { renderYearGrid, priceLevels, describeDate } from './yearGrid.js';
 
@@ -141,7 +141,6 @@ function resetUi() {
     $('rules-details').hidden = true;
     $('plan-summary').textContent = '';
     $('plan-grid').hidden = true;
-    $('plan-table').hidden = true;
     $('skipped-details').hidden = true;
     for (const id of ['export', 'plan', 'apply']) {
         $(id).disabled = true;
@@ -200,16 +199,16 @@ function renderDays(days, year) {
         const flags = [day.reserved ? 'réservée' : '', day.available === false ? 'bloquée' : '', day.promotion ? 'promotion' : ''].filter(Boolean);
         cells[date] = {
             level: levels[date],
-            state: day.reserved ? 'reserved' : day.available === false ? 'blocked' : undefined,
+            flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [],
             title: `${describeDate(date)} · ${price}${flags.length ? ` · ${flags.join(', ')}` : ''}`,
         };
     }
-    const states = new Set(Object.values(cells).map((c) => c.state));
+    const seen = new Set(Object.values(cells).flatMap((c) => c.flags));
     const legend = min === undefined ? [] : [
         { level: 1, label: `${min} €` },
         { level: 5, label: `${max} €` },
-        ...(states.has('reserved') ? [{ state: 'reserved', label: 'réservée' }] : []),
-        ...(states.has('blocked') ? [{ state: 'blocked', label: 'bloquée' }] : []),
+        ...(seen.has('reserved') ? [{ level: 3, flags: ['reserved'], label: 'réservée' }] : []),
+        ...(seen.has('blocked') ? [{ level: 3, flags: ['blocked'], label: 'bloquée' }] : []),
     ];
     renderYearGrid($('read-grid'), year, cells, { legend });
 }
@@ -424,14 +423,6 @@ async function plan() {
 
 function renderPlan(p) {
     $('plan-summary').textContent = `${p.changed} nuits à modifier en ${p.ops.length} opérations · ${p.unchanged} déjà au bon prix · ${p.skipped.length} ignorées${p.past ? ` · ${p.past} passées` : ''}`;
-    const tbody = $('plan-table').querySelector('tbody');
-    tbody.innerHTML = '';
-    for (const op of p.ops) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="date"><span>du</span> ${op.from}<br><span>au</span> ${op.to}</td><td class="num">${op.nights}</td><td class="num">${formatOp(op)}</td><td class="state">en attente</td>`;
-        tbody.append(tr);
-    }
-    $('plan-table').hidden = p.ops.length === 0;
     const ul = $('skipped-list');
     ul.innerHTML = '';
     for (const s of p.skipped) {
@@ -445,58 +436,54 @@ function renderPlan(p) {
     log(`Simulation : ${p.ops.length} opérations, ${p.skipped.length} nuits ignorées`, 'ok');
 }
 
-/** Grille du plan : chaque nuit de l'année cible porte l'état qu'elle aura après application. */
+/**
+ * Grille du plan : chaque nuit de l'année cible est au bon prix ou à un prix
+ * différent ; réservée ou passée s'ajoutent par-dessus. À l'application, les
+ * nuits modifiées passent au bon prix.
+ */
 function renderPlanGrid(p) {
     const cells = {};
     const proposed = state.proposed ?? {};
-    const describe = (date, label) => `${describeDate(date)} · ${label}`;
-    const todayIso = today();
     const current = state.current ?? {};
-    for (const date of Object.keys(proposed)) {
+    const todayIso = today();
+    const skipped = new Map(p.skipped.map((s) => [s.date, s.reason]));
+    for (const [date, next] of Object.entries(proposed)) {
+        const cur = current[date];
+        const flags = [];
+        if (cur?.reserved) {
+            flags.push('reserved');
+        }
         if (date < todayIso) {
-            cells[date] = { state: 'past', title: describe(date, 'passée') };
+            flags.push('past');
         }
-        else if (current[date]?.reserved) {
-            cells[date] = { state: 'reserved', title: describe(date, `réservée, ${current[date].price} € conservé`) };
+        if (!cur || typeof cur.price !== 'number') {
+            cells[date] = { state: 'unknown', flags, title: `${describeDate(date)} · absente du calendrier` };
+            continue;
         }
-        else {
-            cells[date] = { state: 'unchanged', title: describe(date, `${proposed[date].price} € déjà en place`) };
+        const same = cur.price === next.price;
+        const notes = [];
+        if (!same) {
+            notes.push(skipped.get(date) === 'custom' ? 'personnalisée, conservée' : flags.includes('reserved') ? 'réservée, conservée' : flags.includes('past') ? 'passée' : 'à modifier');
         }
-    }
-    for (const s of p.skipped) {
-        cells[s.date] = { state: s.reason, title: describe(s.date, `${SKIP_LABELS[s.reason] ?? s.reason}${s.reason === 'custom' ? `, ${s.current} € conservé` : ''}`) };
-    }
-    for (const op of p.ops) {
-        for (const date of eachDay(op.from, op.to)) {
-            cells[date] = { state: 'pending', title: describe(date, `${priceOf(op, date)} € à appliquer`) };
+        else if (flags.includes('reserved')) {
+            notes.push('réservée');
         }
+        cells[date] = {
+            state: same ? 'ok' : 'diff',
+            flags,
+            title: `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`,
+        };
     }
     state.planGrid = renderYearGrid($('plan-grid'), state.targetYear, cells, {
         legend: [
-            { state: 'pending', label: 'à modifier' },
-            { state: 'done', label: 'fait' },
-            { state: 'unchanged', label: 'déjà au bon prix' },
-            { state: 'custom', label: 'personnalisée' },
-            { state: 'reserved', label: 'réservée' },
-            { state: 'past', label: 'passée' },
+            { state: 'ok', label: 'bon prix' },
+            { state: 'diff', label: 'prix différent' },
+            { state: 'ok', flags: ['reserved'], label: 'réservée' },
+            { state: 'ok', flags: ['past'], label: 'passée' },
         ],
     });
 }
 
-/** Prix d'une opération sur une ligne par motif, le groupe majoritaire de jours étant nommé « autres ». */
-function formatOp(op) {
-    return describeOp(op).split(' · ').map((part) => {
-        const [days, price] = part.split(' ');
-        if (price === undefined) {
-            return part;
-        }
-        return `<span class="days">${days.split('/').length >= 4 ? 'autres' : days}</span> ${price}`;
-    }).join('<br>');
-}
-
-function priceOf(op, date) {
-    return op.byWeekday ? op.byWeekday[WEEKDAY_NAMES[weekday(date)]] : op.price;
-}
 
 function markOp(op, stateName) {
     for (const date of eachDay(op.from, op.to)) {
@@ -506,27 +493,21 @@ function markOp(op, stateName) {
 
 async function apply() {
     const delay = Number($('delay').value) || 1500;
-    const rows = $('plan-table').querySelectorAll('tbody tr');
+    const ops = state.plan.ops;
     $('apply').disabled = true;
     $('plan').disabled = true;
     applying = true;
     let done = 0;
     try {
-        for (const [i, op] of state.plan.ops.entries()) {
-            const cell = rows[i].querySelector('.state');
-            cell.textContent = 'en cours';
-            cell.className = 'state state-busy';
+        for (const op of ops) {
+            $('plan-summary').textContent = `Application en cours : ${done}/${ops.length} opérations, ${describeOp(op)} du ${op.from} au ${op.to}`;
             markOp(op, 'busy');
             try {
                 await callAdapter('applyPrice', op);
-                cell.textContent = 'fait';
-                cell.className = 'state state-done';
-                markOp(op, 'done');
+                markOp(op, 'ok');
                 done += 1;
             }
             catch (e) {
-                cell.textContent = e.message;
-                cell.className = 'state state-error';
                 markOp(op, 'error');
                 log(`Arrêt : ${e.message}`, 'error');
                 break;
@@ -537,7 +518,11 @@ async function apply() {
     finally {
         applying = false;
     }
-    log(`${done}/${state.plan.ops.length} opérations appliquées`, done === state.plan.ops.length ? 'ok' : 'error');
+    const complete = done === ops.length;
+    $('plan-summary').textContent = complete
+        ? `${done} opérations appliquées, ${state.plan.changed} nuits au bon prix`
+        : `Application interrompue après ${done}/${ops.length} opérations, voir le journal`;
+    log(`${done}/${ops.length} opérations appliquées`, complete ? 'ok' : 'error');
     $('plan').disabled = false;
 }
 

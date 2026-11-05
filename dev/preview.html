@@ -63,16 +63,16 @@
         const base = { hiver: [220, 398], ete: [178, 355], noel: [237, 398], printemps: [150, 260], none: [118, 237] };
         for (const d of eachDay('2026-01-01', '2026-12-31')) {
             const [wk, sat] = base[season(d)];
-            days[d] = { price: weekday(d) === 6 ? sat : wk, reserved: d >= '2026-02-14' && d <= '2026-02-21' || d >= '2026-08-08' && d <= '2026-08-15' };
+            days[d] = { price: weekday(d) === 6 ? sat : wk, reserved: d >= '2026-02-14' && d <= '2026-02-21' || d >= '2026-08-08' && d <= '2026-08-15', available: !(d >= '2026-10-01' && d <= '2026-10-10') };
         }
         $('read-summary').textContent = '365 nuits de 2026 lues sur le site, lecture terminée';
         $('read-result').hidden = false;
         const { levels, min, max } = priceLevels(days);
         const cells = {};
         for (const [date, day] of Object.entries(days)) {
-            cells[date] = { level: levels[date], state: day.reserved ? 'reserved' : undefined, title: `${describeDate(date)} · ${day.price} €` };
+            cells[date] = { level: levels[date], flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [], title: `${describeDate(date)} · ${day.price} €` };
         }
-        renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { state: 'reserved', label: 'réservée' }] });
+        renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { level: 3, flags: ['reserved'], label: 'réservée' }, { level: 3, flags: ['blocked'], label: 'bloquée' }] });
         $('base-hint').textContent = 'Détecté : 160 €';
         $('export').disabled = $('plan').disabled = false;
         log('365 nuits de 2026 lues sur le site, lecture terminée', 'ok');
@@ -101,27 +101,19 @@
             ['2027-04-10', '2027-04-25', 16, '<span class="days">autres</span> 150<br><span class="days">sam</span> 260'],
             ['2027-07-03', '2027-08-29', 58, '<span class="days">autres</span> 178<br><span class="days">sam</span> 355'],
         ];
-        const pt = $('plan-table').querySelector('tbody');
-        ops.forEach(([f, t, n, p], i) => {
-            const tr = document.createElement('tr');
-            const st = stage === 'applied' ? (i < 2 ? ['fait', 'state state-done'] : i === 2 ? ['en cours', 'state state-busy'] : ['en attente', 'state']) : ['en attente', 'state'];
-            tr.innerHTML = `<td class="date"><span>du</span> ${f}<br><span>au</span> ${t}</td><td class="num">${n}</td><td class="num">${p}</td><td class="${st[1]}">${st[0]}</td>`;
-            pt.append(tr);
-        });
-        $('plan-table').hidden = false;
         const pc = {};
-        for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: d < '2026-11-05' ? 'past' : 'unchanged' };
-        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = { state: 'custom' };
-        for (const d of eachDay('2027-02-13', '2027-02-20')) pc[d] = { state: 'reserved' };
+        for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'ok' };
+        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = { state: 'diff', title: 'personnalisée, conservée' };
+        for (const d of eachDay('2027-02-13', '2027-02-20')) pc[d] = { state: 'ok', flags: ['reserved'] };
         ops.forEach(([f, t], i) => {
             for (const d of eachDay(f, t)) {
-                if (pc[d].state === 'reserved') continue;
-                pc[d] = { state: stage === 'applied' ? (i < 2 ? 'done' : i === 2 ? 'busy' : 'pending') : 'pending' };
+                if (pc[d].flags) continue;
+                pc[d] = { state: stage === 'applied' ? (i < 2 ? 'ok' : i === 2 ? 'busy' : 'diff') : 'diff' };
             }
         });
         renderYearGrid($('plan-grid'), 2027, pc, { legend: [
-            { state: 'pending', label: 'à modifier' }, { state: 'done', label: 'fait' }, { state: 'unchanged', label: 'déjà au bon prix' },
-            { state: 'custom', label: 'personnalisée' }, { state: 'reserved', label: 'réservée' }, { state: 'past', label: 'passée' },
+            { state: 'ok', label: 'bon prix' }, { state: 'diff', label: 'prix différent' },
+            { state: 'ok', flags: ['reserved'], label: 'réservée' }, { state: 'ok', flags: ['past'], label: 'passée' },
         ] });
         const ul = $('skipped-list');
         for (const d of eachDay('2027-01-02', '2027-01-09')) {
