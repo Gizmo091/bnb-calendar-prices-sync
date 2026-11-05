@@ -128,6 +128,7 @@ async function bind(tabId) {
 
 function resetUi() {
     const currentYear = yearOf(today());
+    syncMode();
     $('year').value = currentYear;
     $('target-year').value = currentYear + 1;
     $('base-price').value = '';
@@ -142,7 +143,7 @@ function resetUi() {
     $('plan-grid').hidden = true;
     $('plan-table').hidden = true;
     $('skipped-details').hidden = true;
-    for (const id of ['export', 'project', 'as-is', 'plan', 'apply']) {
+    for (const id of ['export', 'plan', 'apply']) {
         $(id).disabled = true;
     }
 }
@@ -182,9 +183,7 @@ function setDays(days, year, origin) {
     $('read-result').hidden = false;
     renderDays(days, year);
     $('export').disabled = count === 0;
-    $('project').disabled = count === 0;
-    $('as-is').disabled = count === 0;
-    $('plan').disabled = true;
+    $('plan').disabled = count === 0;
     $('apply').disabled = true;
     suggestBasePrice(days, year);
     log(`${count} nuits de ${year} ${origin}`, 'ok');
@@ -309,8 +308,8 @@ async function importJson(file) {
 async function project() {
     const basePrice = Number($('base-price').value);
     if (!basePrice) {
-        log('Renseignez le prix de base avant de projeter', 'error');
-        return;
+        log('Renseignez le prix de base avant de simuler', 'error');
+        return false;
     }
     const targetYear = Number($('target-year').value);
     try {
@@ -328,12 +327,13 @@ async function project() {
         const rounding = Number($('rounding').value) || 1;
         state.proposed = scalePrices(generateYear(targetYear, state.rules, ctxTarget, basePrice), factor, rounding);
         state.targetYear = targetYear;
-        log(`${Object.keys(state.rules).length} règles inférées, ${Object.keys(state.proposed).length} nuits projetées sur ${targetYear}`, 'ok');
-        $('plan').disabled = false;
+        log(`${Object.keys(state.rules).length} règles déduites, ${Object.keys(state.proposed).length} nuits projetées sur ${targetYear}`, 'ok');
         persist();
+        return true;
     }
     catch (e) {
         log(e.message, 'error');
+        return false;
     }
 }
 
@@ -353,8 +353,8 @@ function useAsIs() {
     $('target-year').value = state.year;
     $('rules-details').hidden = true;
     log(`${Object.keys(state.proposed).length} nuits de ${state.year} reprises telles quelles${factor !== 1 ? ` (× ${factor})` : ''}`, 'ok');
-    $('plan').disabled = false;
     persist();
+    return true;
 }
 
 function renderRules(rules) {
@@ -368,10 +368,28 @@ function renderRules(rules) {
         tbody.append(tr);
     }
     $('rules-details').hidden = false;
-    $('rules-details').open = true;
 }
 
 /* ---------- 4. Simulation et application ---------- */
+
+/** Projette ou reprend les prix selon le mode choisi, puis compare au calendrier cible. */
+async function simulate() {
+    $('plan').disabled = true;
+    $('apply').disabled = true;
+    try {
+        const ready = $('mode').value === 'project' ? await project() : useAsIs();
+        if (ready) {
+            await plan();
+        }
+    }
+    finally {
+        $('plan').disabled = false;
+    }
+}
+
+function syncMode() {
+    $('target-year-field').hidden = $('mode').value !== 'project';
+}
 
 async function plan() {
     const basePrice = Number($('base-price').value);
@@ -514,9 +532,8 @@ $('base-price').addEventListener('change', persist);
 $('read').addEventListener('click', readCalendar);
 $('export').addEventListener('click', exportJson);
 $('import').addEventListener('change', (e) => e.target.files[0] && importJson(e.target.files[0]));
-$('project').addEventListener('click', project);
-$('as-is').addEventListener('click', useAsIs);
-$('plan').addEventListener('click', plan);
+$('mode').addEventListener('change', syncMode);
+$('plan').addEventListener('click', simulate);
 $('apply').addEventListener('click', apply);
 
 chrome.tabs.onActivated.addListener(({ tabId }) => {

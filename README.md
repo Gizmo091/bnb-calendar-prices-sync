@@ -16,8 +16,10 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
 - **Ne jamais écraser un prix déjà personnalisé** : seules les nuits encore au
   prix de base sont modifiées. Le prix de base est détecté automatiquement sur
   les nuits lointaines du calendrier et doit être confirmé par vous.
-- **Simulation obligatoire** avant application : la liste exacte des plages et
-  des prix est affichée, avec les nuits ignorées et la raison.
+- **Simulation obligatoire** avant application : la projection et la
+  comparaison au calendrier cible se font d'un seul geste, et la liste exacte
+  des plages et des prix est affichée, avec les nuits ignorées et la raison ;
+  les règles déduites de l'année source restent consultables en détail.
 - **Transfert entre plateformes** : « Appliquer tels quels » reprend un fichier
   exporté d'un site sur l'autre, pour la même année, avec un coefficient et un
   arrondi optionnels pour ajuster le prix.

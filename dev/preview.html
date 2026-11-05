@@ -74,7 +74,7 @@
         }
         renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { state: 'reserved', label: 'réservée' }] });
         $('base-hint').textContent = 'Détecté : 160 €';
-        $('export').disabled = $('project').disabled = $('as-is').disabled = false;
+        $('export').disabled = $('plan').disabled = false;
         log('365 nuits de 2026 lues sur le site, lecture terminée', 'ok');
     }
     if (stage === 'planned' || stage === 'applied') {
@@ -93,8 +93,6 @@
             tbody.append(tr);
         }
         $('rules-details').hidden = false;
-        $('rules-details').open = true;
-        $('plan').disabled = false;
         $('apply').disabled = false;
         $('plan-summary').textContent = '212 nuits à modifier en 14 opérations · 96 déjà au bon prix · 57 ignorées';
         const ops = [
