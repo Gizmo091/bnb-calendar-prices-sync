@@ -181,6 +181,7 @@ function setDays(days, year, origin) {
     const count = Object.keys(days).length;
     $('read-summary').textContent = `${count} nuits de ${year} ${origin}`;
     $('read-result').hidden = false;
+    syncMode();
     renderDays(days, year);
     $('export').disabled = count === 0;
     $('plan').disabled = count === 0;
@@ -387,7 +388,12 @@ async function simulate() {
     }
 }
 
+/** Libellés du mode avec les années concernées, et champ « Vers » seulement pour un report. */
 function syncMode() {
+    const year = state?.year ?? Number($('year').value);
+    const [project, asIs] = $('mode').options;
+    project.textContent = `Reporter les tarifs de ${year} sur une autre année`;
+    asIs.textContent = `Appliquer les tarifs à l'année ${year}`;
     $('target-year-field').hidden = $('mode').value !== 'project';
 }
 
@@ -527,7 +533,7 @@ async function apply() {
 
 /* ---------- Câblage ---------- */
 
-$('year').addEventListener('change', () => { $('target-year').value = Number($('year').value) + 1; });
+$('year').addEventListener('change', () => { $('target-year').value = Number($('year').value) + 1; syncMode(); });
 $('base-price').addEventListener('change', persist);
 $('read').addEventListener('click', readCalendar);
 $('export').addEventListener('click', exportJson);
