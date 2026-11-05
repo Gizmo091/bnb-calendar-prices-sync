@@ -91,6 +91,31 @@ h2 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-size
 
 /* ---------- Texte ---------- */
 
+.help { position: relative; display: inline-flex; align-self: center; }
+button.info { width: 20px; height: 20px; padding: 0; border: 0; border-radius: 10px; background: transparent; color: var(--fg-3); }
+button.info:hover { background: var(--raised); color: var(--fg); border-color: transparent; }
+button.info svg { width: 16px; height: 16px; }
+.tip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 2;
+    width: 280px;
+    margin-top: 4px;
+    padding: 8px 12px;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    color: var(--fg-2);
+    font-weight: 400;
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+}
+.help:hover .tip, .help:focus-within .tip { opacity: 1; transform: none; }
+
 .notice { margin: 16px 0 0; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--raised); color: var(--fg-2); }
 .notice code { font: 12px/16px var(--mono); color: var(--fg); }
 
