@@ -634,7 +634,7 @@ async function plan() {
         for (const date of Object.keys(chunk).sort()) {
             const next = state.proposed[date];
             if (next) {
-                grid.update(date, planCell(date, chunk[date], next, provisionalReason(chunk[date], next, { basePrice, overwrite })), { delay: reveal() });
+                grid.update(date, planCell(date, chunk[date], next, provisionalReason(chunk[date], next, { basePrice, overwrite }), { basePrice }), { delay: reveal() });
             }
         }
         await reveal.settled();
@@ -706,8 +706,11 @@ function renderPlan(p) {
     log(`Prévisualisation : ${p.ops.length} opérations, ${p.skipped.length} nuits ignorées`, 'ok');
 }
 
-/** Apparence d'une nuit du plan : bon prix, prix différent ou personnalisée, avec réservée, bloquée et passée par-dessus. */
-function planCell(date, cur, next, reason) {
+/**
+ * Apparence d'une nuit du plan : bon prix, prix différent, personnalisée
+ * conservée ou personnalisée écrasée ; réservée, bloquée et passée par-dessus.
+ */
+function planCell(date, cur, next, reason, { basePrice }) {
     const flags = [];
     if (cur?.reserved) {
         flags.push('reserved');
@@ -722,10 +725,14 @@ function planCell(date, cur, next, reason) {
         return { state: 'unknown', flags, title: `${describeDate(date)} · absente du calendrier` };
     }
     const same = cur.price === next.price;
-    const custom = reason === 'custom';
+    const isCustom = typeof cur.custom === 'boolean' ? cur.custom : cur.price !== basePrice;
+    const kept = reason === 'custom';
     const notes = [];
     if (!same) {
-        notes.push(custom ? 'personnalisée, conservée' : flags.includes('reserved') ? 'réservée, conservée' : flags.includes('past') ? 'passée' : 'à modifier');
+        notes.push(kept ? 'personnalisée, conservée'
+            : flags.includes('reserved') ? 'réservée, conservée'
+                : flags.includes('past') ? 'passée'
+                    : isCustom ? 'personnalisée, écrasée' : 'à modifier');
     }
     else if (flags.includes('reserved')) {
         notes.push('réservée');
@@ -733,8 +740,9 @@ function planCell(date, cur, next, reason) {
     if (flags.includes('blocked')) {
         notes.push('bloquée');
     }
+    const state = same ? 'ok' : kept ? 'custom' : isCustom && !flags.includes('reserved') && !flags.includes('past') ? 'custom-diff' : 'diff';
     return {
-        state: same ? 'ok' : custom ? 'custom' : 'diff',
+        state,
         flags,
         title: `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`,
     };
@@ -748,12 +756,14 @@ function planCell(date, cur, next, reason) {
  */
 function renderPlanGrid(p) {
     const cells = {};
+    const basePrice = Number($('base-price').value);
+    const overwrite = $('overwrite').checked;
     const proposed = state.proposed ?? {};
     const current = state.current ?? {};
     const skipped = new Map((p?.skipped ?? []).map((s) => [s.date, s.reason]));
     for (const [date, next] of Object.entries(proposed)) {
         cells[date] = p
-            ? planCell(date, current[date], next, skipped.get(date))
+            ? planCell(date, current[date], next, skipped.get(date), { basePrice })
             : { state: 'pending', title: `${describeDate(date)} · lecture en cours` };
     }
     const seen = new Set(Object.values(cells).flatMap((c) => c.flags ?? []));
@@ -761,7 +771,7 @@ function renderPlanGrid(p) {
         legend: [
             { state: 'ok', label: 'bon prix, conservée' },
             { state: 'diff', label: 'à modifier' },
-            { state: 'custom', label: 'personnalisée, conservée' },
+            overwrite ? { state: 'custom-diff', label: 'personnalisée, écrasée' } : { state: 'custom', label: 'personnalisée, conservée' },
             ...(seen.has('reserved') || !p ? [{ flags: ['reserved'], label: 'réservée' }] : []),
             ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
             ...(seen.has('past') ? [{ state: 'ok', flags: ['past'], label: 'passée' }] : []),

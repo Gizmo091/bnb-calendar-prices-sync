@@ -26,6 +26,9 @@
     --heat-5: #cf3f33;
     /* Nuit du plan à modifier : un bleu léger, à part de l'échelle des prix. */
     --diff: #b9d2ea;
+    --diff-strong: #6a97cf;
+    --tip-bg: #171717;
+    --tip-fg: #ffffff;
     --shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 8px 24px rgba(0, 0, 0, .08);
     --ease: cubic-bezier(.22, 1, .36, 1);
     --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -52,6 +55,9 @@
         --heat-4: #cf5a2e;
         --heat-5: #d1403a;
         --diff: #3d618a;
+        --diff-strong: #7fa9dd;
+        --tip-bg: #ededed;
+        --tip-fg: #171717;
         --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .4);
     }
 }
@@ -250,11 +256,30 @@ label.file input { display: none; }
 /* ---------- Grille de l'année ---------- */
 
 .year-grid {
+    position: relative;
     display: grid;
     grid-template-columns: 28px repeat(31, minmax(0, 1fr));
     gap: 2px;
     margin-top: 12px;
 }
+/* Au survol, la case s'avance et grossit ; l'infobulle apparaît sans délai. */
+.year-grid > .cell { transition: transform 120ms var(--ease); }
+.year-grid > .cell:hover { transform: scale(1.7); z-index: 1; box-shadow: 0 0 0 1px var(--surface), 0 2px 6px rgba(0, 0, 0, .25); }
+.grid-tip {
+    position: absolute;
+    z-index: 2;
+    transform: translate(-50%, -100%);
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--tip-bg);
+    color: var(--tip-fg);
+    font: 11px/14px var(--mono);
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: var(--shadow);
+}
+.grid-tip.below { transform: translate(-50%, 0); }
+.grid-tip[hidden] { display: none; }
 .year-grid .month { font: 11px/12px var(--mono); color: var(--fg-3); align-self: center; }
 .year-grid .cell {
     display: block;
@@ -272,6 +297,7 @@ label.file input { display: none; }
 .cell[data-level="5"] { background-color: var(--heat-5); }
 .cell[data-state="ok"] { background-color: var(--accent); }
 .cell[data-state="diff"] { background-color: var(--diff); }
+.cell[data-state="custom-diff"] { background-color: var(--diff-strong); }
 .cell[data-state="custom"] { background-color: color-mix(in oklab, var(--fg) 55%, var(--raised)); }
 .cell[data-state="pending"] { background-color: var(--raised); }
 /* La prochaine nuit à lire respire le temps que le site réponde, dans la couleur de sa grille. */

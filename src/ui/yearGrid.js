@@ -8,7 +8,7 @@
  * - `state` parmi ok, diff, custom, pending, next, busy, error, unknown : la couleur de fond ;
  * - `flags` parmi reserved, blocked, past : des marques qui se superposent
  *   à la couleur (hachures, atténuation) sans la remplacer ;
- * - `title` est l'infobulle de la case.
+ * - `title` est l'infobulle de la case, affichée par la grille elle-même.
  */
 import { eachDay, yearBounds, weekday } from '../core/index.js';
 
@@ -27,8 +27,49 @@ function applySpec(cell, spec) {
         }
     }
     if (spec.title) {
-        cell.title = spec.title;
+        cell.dataset.tip = spec.title;
     }
+}
+
+/**
+ * Infobulle de la grille : un seul élément par grille, affiché sans délai
+ * au survol d'une case, au-dessus d'elle (ou dessous sur la première ligne).
+ */
+const withTooltip = new WeakSet();
+
+function attachTooltip(el) {
+    const tip = document.createElement('span');
+    tip.className = 'grid-tip';
+    tip.hidden = true;
+    el.append(tip);
+    if (withTooltip.has(el)) {
+        return;
+    }
+    withTooltip.add(el);
+    el.addEventListener('pointerover', (event) => {
+        const current = el.querySelector(':scope > .grid-tip');
+        const cell = event.target.closest('.cell[data-tip]');
+        if (!current || !cell || cell.parentElement !== el) {
+            if (current) {
+                current.hidden = true;
+            }
+            return;
+        }
+        current.textContent = cell.dataset.tip;
+        current.hidden = false;
+        const half = current.offsetWidth / 2;
+        const x = Math.min(Math.max(cell.offsetLeft + cell.offsetWidth / 2, half), el.clientWidth - half);
+        const above = cell.offsetTop > current.offsetHeight + 8;
+        current.style.left = `${x}px`;
+        current.style.top = above ? `${cell.offsetTop - 6}px` : `${cell.offsetTop + cell.offsetHeight + 6}px`;
+        current.classList.toggle('below', !above);
+    });
+    el.addEventListener('pointerleave', () => {
+        const current = el.querySelector(':scope > .grid-tip');
+        if (current) {
+            current.hidden = true;
+        }
+    });
 }
 const MONTHS = ['jan', 'fév', 'mar', 'avr', 'mai', 'juin', 'juil', 'aoû', 'sep', 'oct', 'nov', 'déc'];
 const LEVELS = 5;
@@ -40,6 +81,7 @@ const LEVELS = 5;
 export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
     el.innerHTML = '';
     el.hidden = false;
+    attachTooltip(el);
     const { from, to } = yearBounds(year);
     const index = new Map();
     let month = -1;
@@ -125,7 +167,7 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
             for (const key of ['level', 'state', ...FLAGS]) {
                 delete cell.dataset[key];
             }
-            cell.removeAttribute('title');
+            delete cell.dataset.tip;
             cell.classList.remove('reveal');
             applySpec(cell, spec);
             if (delay !== null) {

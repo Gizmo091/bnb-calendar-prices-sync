@@ -16,7 +16,7 @@
     import { renderYearGrid, priceLevels, describeDate } from '../src/ui/yearGrid.js';
     import { eachDay, weekday } from '../src/core/index.js';
 
-    // Paramètres : ?dark, ?state=unsupported|empty|loaded|reading|planned|applied
+    // Paramètres : ?dark, ?state=unsupported|empty|loaded|reading|planned|applied, &overwrite
     const params = new URLSearchParams(location.search);
     const dark = params.has('dark');
     const stage = params.get('state') ?? 'applied';
@@ -103,7 +103,7 @@
         const pc = {};
         for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'pending', title: 'lecture en cours' };
         const grid = renderYearGrid($('plan-grid'), 2027, pc, { legend: [
-            { state: 'ok', label: 'bon prix, conservée' }, { state: 'diff', label: 'à modifier' }, { state: 'custom', label: 'personnalisée, conservée' },
+            { state: 'ok', label: 'bon prix, conservée' }, { state: 'diff', label: 'à modifier' }, overwrite ? { state: 'custom-diff', label: 'personnalisée, écrasée' } : { state: 'custom', label: 'personnalisée, conservée' },
             { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }, { state: 'ok', flags: ['past'], label: 'passée' },
         ] });
         $('apply-hint').textContent = 'Prévisualisation en cours';
@@ -153,7 +153,9 @@
         ];
         const pc = {};
         for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'ok' };
-        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = { state: 'custom', title: 'personnalisée, conservée' };
+        const overwrite = params.has('overwrite');
+        $('overwrite').checked = overwrite;
+        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = overwrite ? { state: 'custom-diff', title: `${d} · 166 € → 220 € · personnalisée, écrasée` } : { state: 'custom', title: `${d} · 166 € · personnalisée, conservée` };
         for (const d of eachDay('2027-02-13', '2027-02-20')) pc[d] = { state: 'ok', flags: ['reserved'] };
         for (const d of eachDay('2027-10-01', '2027-10-10')) pc[d] = { state: 'ok', flags: ['blocked'] };
         for (const d of eachDay('2027-01-01', '2027-01-15')) pc[d] = { ...pc[d], flags: [...(pc[d].flags ?? []), 'past'] };
@@ -164,7 +166,7 @@
             }
         });
         renderYearGrid($('plan-grid'), 2027, pc, { legend: [
-            { state: 'ok', label: 'bon prix, conservée' }, { state: 'diff', label: 'à modifier' }, { state: 'custom', label: 'personnalisée, conservée' },
+            { state: 'ok', label: 'bon prix, conservée' }, { state: 'diff', label: 'à modifier' }, overwrite ? { state: 'custom-diff', label: 'personnalisée, écrasée' } : { state: 'custom', label: 'personnalisée, conservée' },
             { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }, { state: 'ok', flags: ['past'], label: 'passée' },
         ] });
         const ul = $('skipped-list');
