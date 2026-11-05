@@ -6,8 +6,9 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
 
 ## Fonctionnalités
 
-- **Exporter** les prix d'une année, nuit par nuit, dans un fichier JSON.
-- **Importer** un JSON et l'appliquer au calendrier d'un site.
+- **Exporter** les prix d'une année, nuit par nuit, dans un fichier de prix
+  (`.bnbprices`, du JSON lisible).
+- **Importer** un fichier de prix et l'appliquer au calendrier d'un site.
 - **Reporter une année sur la suivante** en suivant les vacances scolaires :
   les prix de l'année N sont traduits en règles par période (Noël, hiver zone A,
   hiver zones A+B, été, hors vacances…), puis réappliqués sur les dates
@@ -17,7 +18,7 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
   les nuits lointaines du calendrier et doit être confirmé par vous.
 - **Simulation obligatoire** avant application : la liste exacte des plages et
   des prix est affichée, avec les nuits ignorées et la raison.
-- **Transfert entre plateformes** : « Appliquer tels quels » reprend un JSON
+- **Transfert entre plateformes** : « Appliquer tels quels » reprend un fichier
   exporté d'un site sur l'autre, pour la même année, avec un coefficient et un
   arrondi optionnels pour ajuster le prix.
 
@@ -36,7 +37,9 @@ Les vacances scolaires viennent de l'open data de l'Éducation nationale
 
 Chrome 114 ou plus récent (API `sidePanel`).
 
-## Format JSON
+## Format du fichier de prix
+
+Le fichier `prix-<site>-<année>.bnbprices` contient du JSON :
 
 ```json
 {

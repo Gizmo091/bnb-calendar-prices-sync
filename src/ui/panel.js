@@ -24,6 +24,9 @@ const CONFIDENT_SHARE = 0.9;
 const BIND_ATTEMPTS = 4;
 const BIND_RETRY_MS = 500;
 
+/** Les fichiers de prix sont du JSON, sous une extension propre à l'extension pour être reconnus. */
+const FILE_EXTENSION = '.bnbprices';
+
 const SKIP_LABELS = {
     custom: 'déjà personnalisée',
     reserved: 'réservée',
@@ -275,7 +278,7 @@ function exportJson() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `prices-${doc.site}-${state.year}.json`;
+    a.download = `prix-${doc.site}-${state.year}${FILE_EXTENSION}`;
     a.click();
     URL.revokeObjectURL(url);
     log(`Export ${a.download}`, 'ok');
@@ -286,7 +289,7 @@ async function importJson(file) {
         const doc = JSON.parse(await file.text());
         const errors = validateExport(doc);
         if (errors.length) {
-            throw new Error(`Fichier invalide : ${errors.join(' ; ')}`);
+            throw new Error(`Ce fichier n'est pas un fichier de prix de l'extension : ${errors.join(' ; ')}`);
         }
         const years = new Set(Object.keys(doc.days).map(yearOf));
         const year = years.size === 1 ? [...years][0] : Number($('year').value);
