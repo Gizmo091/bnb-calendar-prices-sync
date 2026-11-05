@@ -10,9 +10,19 @@
  */
 import { eachDay, weekday, yearBounds } from './dates.js';
 
-/** Nuit du samedi : 'sat', le reste : 'wk'. */
-export function dayTypeOf(iso) {
-    return weekday(iso) === 6 ? 'sat' : 'wk';
+/** Codes des jours de la semaine, indexés comme `weekday` (0 = dimanche). */
+export const DAY_CODES = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+export const DAY_NAMES = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+/** Par défaut, seul le samedi a un tarif propre. */
+export const DEFAULT_SPECIAL_DAYS = [6];
+
+/**
+ * Type de jour : le code du jour s'il a un tarif propre (`specialDays`, numéros
+ * de jour comme `weekday`), sinon 'wk' pour « les autres jours ».
+ */
+export function dayTypeOf(iso, specialDays = DEFAULT_SPECIAL_DAYS) {
+    const day = weekday(iso);
+    return specialDays.includes(day) ? DAY_CODES[day] : 'wk';
 }
 
 /** Saisons sans vacances scolaires, distinguées par les vacances qui les encadrent. */
@@ -61,7 +71,7 @@ export function neighbours(iso, periods, season = null) {
     return { before: before?.season ?? 'start', after: after?.season ?? 'end' };
 }
 
-export function labelDay(iso, ctx) {
+export function labelDay(iso, ctx, { specialDays = DEFAULT_SPECIAL_DAYS } = {}) {
     const zones = new Set();
     let season = null;
     for (const p of ctx.schoolPeriods) {
@@ -84,7 +94,7 @@ export function labelDay(iso, ctx) {
         before,
         after,
         gap: GAP_SEASONS.has(season) ? `${before}>${after}` : null,
-        dayType: dayTypeOf(iso),
+        dayType: dayTypeOf(iso, specialDays),
         publicHoliday,
     };
 }
@@ -103,13 +113,18 @@ export function parseRuleKey(key) {
 }
 
 /** @returns {Map<string, object>} date -> label */
-export function labelYear(year, ctx) {
+export function labelYear(year, ctx, options = {}) {
     const { from, to } = yearBounds(year);
     const labels = new Map();
     for (const d of eachDay(from, to)) {
-        labels.set(d, labelDay(d, ctx));
+        labels.set(d, labelDay(d, ctx, options));
     }
     return labels;
+}
+
+export function describeDayType(dayType) {
+    const index = DAY_CODES.indexOf(dayType);
+    return index === -1 ? 'autres jours' : DAY_NAMES[index];
 }
 
 export function describeGap(gap) {
@@ -126,6 +141,6 @@ export function describeRuleKey(key) {
     if (gap) {
         parts.push(describeGap(gap));
     }
-    parts.push(dayType === 'sat' ? 'samedi' : 'autres jours');
+    parts.push(describeDayType(dayType));
     return parts.join(' · ');
 }

@@ -342,14 +342,15 @@ async function project() {
         if (!ctxTarget.schoolPeriods.some((p) => p.start.startsWith(String(targetYear)) && p.season === 'noel')) {
             log(`Attention : les vacances de Noël ${targetYear} ne sont pas encore publiées, décembre retombera sur le hors-saison`, 'error');
         }
-        state.rules = inferRules(state.days, labelYear(state.year, ctxSource));
+        const specialDays = readSpecialDays();
+        state.rules = inferRules(state.days, labelYear(state.year, ctxSource, { specialDays }));
         renderRules(state.rules);
         const factor = readFactor();
         if (factor === null) {
             return false;
         }
         const rounding = Number($('rounding').value) || 1;
-        state.proposed = scalePrices(generateYear(targetYear, state.rules, ctxTarget, basePrice), factor, rounding);
+        state.proposed = scalePrices(generateYear(targetYear, state.rules, ctxTarget, basePrice, { specialDays }), factor, rounding);
         state.targetYear = targetYear;
         log(`${Object.keys(state.rules).length} règles déduites, ${Object.keys(state.proposed).length} nuits projetées sur ${targetYear}`, 'ok');
         persist();
@@ -398,6 +399,47 @@ function renderRules(rules) {
 }
 
 /* ---------- 4. Simulation et application ---------- */
+
+/** Numéros des jours cochés comme ayant un tarif propre (0 = dimanche). */
+function readSpecialDays() {
+    return [...$('special-days').querySelectorAll('input:checked')].map((input) => Number(input.value));
+}
+
+/* ---------- Réglages persistants ---------- */
+
+const SETTINGS_KEY = 'settings';
+
+async function saveSettings() {
+    await chrome.storage.local.set({
+        [SETTINGS_KEY]: {
+            factor: $('factor').value,
+            rounding: $('rounding').value,
+            specialDays: readSpecialDays(),
+            delay: $('delay').value,
+        },
+    });
+}
+
+async function restoreSettings() {
+    const saved = (await chrome.storage.local.get(SETTINGS_KEY))[SETTINGS_KEY];
+    if (!saved) {
+        return;
+    }
+    if (saved.factor !== undefined) {
+        $('factor').value = saved.factor;
+    }
+    if (saved.rounding !== undefined) {
+        $('rounding').value = saved.rounding;
+    }
+    if (Array.isArray(saved.specialDays)) {
+        for (const input of $('special-days').querySelectorAll('input')) {
+            input.checked = saved.specialDays.includes(Number(input.value));
+        }
+    }
+    if (saved.delay !== undefined) {
+        $('delay').value = saved.delay;
+    }
+}
 
 /** Coefficient saisi avec une virgule ou un point ; null et message si la saisie n'est pas un nombre positif. */
 function readFactor() {
@@ -594,6 +636,10 @@ $('read').addEventListener('click', readCalendar);
 $('export').addEventListener('click', exportJson);
 $('import').addEventListener('change', (e) => e.target.files[0] && importJson(e.target.files[0]));
 $('mode').addEventListener('change', syncMode);
+for (const id of ['factor', 'rounding', 'special-days', 'delay']) {
+    $(id).addEventListener('change', saveSettings);
+}
+await restoreSettings();
 document.addEventListener('click', (e) => {
     const settings = $('settings');
     if (settings.open && !settings.contains(e.target)) {

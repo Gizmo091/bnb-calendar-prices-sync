@@ -128,6 +128,11 @@ details.settings { position: relative; margin: 0; }
     background: var(--surface); box-shadow: var(--shadow);
 }
 .popover .field { justify-content: space-between; white-space: normal; }
+.field-group { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); }
+.field-label { color: var(--fg-2); }
+.days { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.days .check { font: 12px/20px var(--mono); gap: 6px; }
+.field-group .hint { margin: 0; font-size: 12px; line-height: 16px; color: var(--fg-3); }
 
 /* ---------- Texte ---------- */
 

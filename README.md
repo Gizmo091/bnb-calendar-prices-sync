@@ -12,7 +12,9 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
 - **Reporter une année sur la suivante** en suivant les vacances scolaires :
   les prix de l'année N sont traduits en règles par période (Noël, hiver zone A,
   hiver zones A+B, été, hors vacances…), puis réappliqués sur les dates
-  correspondantes de l'année N+1, qui ne tombent jamais aux mêmes dates.
+  correspondantes de l'année N+1, qui ne tombent jamais aux mêmes dates. Les
+  jours qui ont leur propre tarif dans chaque période (le samedi par défaut,
+  réglable : vendredi et samedi, samedi et dimanche…) ont chacun leur règle.
 - **Ne jamais écraser un prix déjà personnalisé** : seules les nuits encore au
   prix de base sont modifiées. Le prix de base est détecté automatiquement sur
   les nuits lointaines du calendrier et doit être confirmé par vous.

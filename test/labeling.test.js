@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { labelDay, ruleKey, labelYear, describeRuleKey, parseRuleKey, neighbours } from '../src/core/labeling.js';
+import { labelDay, ruleKey, labelYear, describeRuleKey, parseRuleKey, neighbours, dayTypeOf } from '../src/core/labeling.js';
 import { contextFor } from './helpers.js';
 
 const ctx = contextFor(2026);
@@ -55,4 +55,14 @@ test('describeRuleKey et parseRuleKey', () => {
     assert.equal(describeRuleKey('none|noel>hiver|wk'), 'Hors vacances · entre Noël et hiver · autres jours');
     assert.deepEqual(parseRuleKey('none|hiver>printemps|wk'), { season: 'none', zones: [], gap: 'hiver>printemps', dayType: 'wk' });
     assert.deepEqual(parseRuleKey('hiver|A|sat'), { season: 'hiver', zones: ['A'], gap: null, dayType: 'sat' });
+});
+
+test('les jours à tarif propre sont réglables', () => {
+    assert.equal(dayTypeOf('2026-01-10'), 'sat', 'samedi par défaut');
+    assert.equal(dayTypeOf('2026-01-11'), 'wk', 'le dimanche est un jour comme les autres par défaut');
+    assert.equal(dayTypeOf('2026-01-11', [6, 0]), 'sun');
+    assert.equal(dayTypeOf('2026-01-10', []), 'wk', 'sans jour à tarif propre, tout est « autres jours »');
+    assert.equal(ruleKey(labelDay('2026-01-09', ctx, { specialDays: [5, 6] })), 'none|noel>hiver|fri');
+    assert.equal(describeRuleKey('none|noel>hiver|fri'), 'Hors vacances · entre Noël et hiver · vendredi');
+    assert.equal(labelYear(2026, ctx, { specialDays: [0] }).get('2026-01-11').dayType, 'sun');
 });

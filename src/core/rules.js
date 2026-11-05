@@ -103,7 +103,7 @@ export function resolvePrice(label, rules, basePrice) {
     if (exact) {
         return exact;
     }
-    const dayTypes = label.dayType === 'sat' ? ['sat', 'wk'] : ['wk'];
+    const dayTypes = label.dayType === 'wk' ? ['wk'] : [label.dayType, 'wk'];
     if (!label.gap) {
         for (const dayType of dayTypes) {
             const key = closestHolidayRule(rules, label, dayType);
@@ -136,9 +136,9 @@ export function resolvePrice(label, rules, basePrice) {
  * Génère les prix d'une année à partir des règles.
  * @returns {Object<string,{price:number,source:string,rule:string|null}>}
  */
-export function generateYear(year, rules, ctx, basePrice) {
+export function generateYear(year, rules, ctx, basePrice, options = {}) {
     const out = {};
-    for (const [date, label] of labelYear(year, ctx)) {
+    for (const [date, label] of labelYear(year, ctx, options)) {
         out[date] = resolvePrice(label, rules, basePrice);
     }
     return out;
