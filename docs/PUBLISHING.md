@@ -32,6 +32,8 @@ Créer un élément, téléverser l'archive, puis onglet par onglet :
 - Petite vignette promotionnelle : `tile-440x280.png`.
 - Bandeau promotionnel : `marquee-1400x560.png`.
 - Page d'accueil et assistance : l'adresse du dépôt GitHub et sa page issues.
+- Le lien Buy Me a Coffee est dans la description détaillée ; le store n'a pas
+  de champ dédié aux dons.
 
 **Confidentialité**
 - Objectif unique : bloc « Objectif unique ».
