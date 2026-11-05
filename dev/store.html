@@ -10,6 +10,7 @@
      * ?shot=read|plan|select|apply|prefs&lang=fr|en   capture 1280 × 800
      * ?tile=small&lang=…                                vignette 440 × 280
      * ?tile=marquee&lang=…                              bandeau 1400 × 560
+     * ?tile=social&lang=…                               image de partage GitHub 1280 × 640
      */
     html, body { margin: 0; }
     body { font: 400 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: #fff; background: #1e3f93; }
@@ -33,6 +34,10 @@
     .tile p { margin: 0; font-size: 18px; color: rgba(255, 255, 255, .86); max-width: 370px; }
     .frame.marquee { width: 1400px; height: 560px; display: flex; align-items: center; gap: 56px; padding: 0 80px; box-sizing: border-box; }
     .marquee .copy h1 { font-size: 48px; }
+    .frame.social { width: 1280px; height: 640px; display: flex; align-items: center; gap: 56px; padding: 0 72px; box-sizing: border-box; }
+    .social .copy h1 { font-size: 44px; }
+    .social .panel { height: 560px; zoom: 1; }
+    .social .panel iframe { height: 560px; }
     .marquee .panel { height: 480px; zoom: 1; }
     .marquee .panel iframe { height: 480px; }
 </style>
@@ -84,6 +89,9 @@
     if (tile === 'small') {
         document.body.innerHTML = `<div class="frame tile">${wordmark}<p>${texts.tagline}</p></div>`;
     }
+    else if (tile === 'social') {
+        document.body.innerHTML = `<div class="frame social"><div class="copy">${wordmark}<h1>${texts.tagline}</h1><ul>${texts.plan.points.map((p) => `<li>${p}</li>`).join('')}</ul></div>${panel('planned')}</div>`;
+    }
     else if (tile === 'marquee') {
         document.body.innerHTML = `<div class="frame marquee"><div class="copy">${wordmark}<h1>${texts.tagline}</h1><ul>${texts.plan.points.map((p) => `<li>${p}</li>`).join('')}</ul></div>${panel('planned')}</div>`;
     }
@@ -99,8 +107,8 @@
             win.scrollTo(0, shot.scroll);
         });
     }
-    if (tile === 'marquee') {
-        whenReady(document.querySelector('iframe'), (doc, win) => win.scrollTo(0, 600));
+    if (tile === 'marquee' || tile === 'social') {
+        whenReady(document.querySelector('iframe'), (doc, win) => win.scrollTo(0, tile === 'social' ? 676 : 600));
     }
 </script>
 </body>

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Génère les visuels de la fiche du Chrome Web Store dans store/screenshots :
-# cinq captures 1280 × 800, la vignette 440 × 280 et le bandeau 1400 × 560,
+# cinq captures 1280 × 800, la vignette 440 × 280, le bandeau 1400 × 560 et
+# l'image de partage GitHub 1280 × 640,
 # en français et en anglais, à partir de dev/store.html rendu par Chrome
 # headless. Nécessite Google Chrome et python3.
 set -eu
@@ -27,4 +28,5 @@ for lang in fr en; do
     done
     shoot "store/screenshots/$lang/tile-440x280.png" 440 280 "tile=small&lang=$lang"
     shoot "store/screenshots/$lang/marquee-1400x560.png" 1400 560 "tile=marquee&lang=$lang"
+    shoot "store/screenshots/$lang/social-1280x640.png" 1280 640 "tile=social&lang=$lang"
 done

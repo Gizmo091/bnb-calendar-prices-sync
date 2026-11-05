@@ -60,6 +60,21 @@ et fériés d'une trentaine de pays européens, région par région. Ces API
 acceptent les requêtes de toute origine, l'extension ne demande aucune
 permission sur elles.
 
+## Aperçu
+
+<table>
+  <tr>
+    <td><img src="store/screenshots/fr/1-read.png" alt="Lecture du calendrier, nuit par nuit" width="100%"></td>
+    <td><img src="store/screenshots/fr/2-plan.png" alt="Prévisualisation, chaque nuit dans la couleur du tarif à appliquer" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="store/screenshots/fr/3-select.png" alt="Application à une sélection de nuits" width="100%"></td>
+    <td><img src="store/screenshots/fr/4-apply.png" alt="Enregistrement avec pause et arrêt" width="100%"></td>
+  </tr>
+</table>
+
+Les mêmes captures en anglais sont dans `store/screenshots/en`.
+
 ## Installation (mode développeur)
 
 1. `chrome://extensions`, activer le mode développeur.
