@@ -6,7 +6,7 @@
 
 <br clear="left">
 
-[![CI](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml/badge.svg)](https://github.com/Gizmo091/bnb-calendar-prices-sync/actions/workflows/ci.yml)
+[![CI](https://github.com/Gizmo091/bnbridge-chrome-extension/actions/workflows/ci.yml/badge.svg)](https://github.com/Gizmo091/bnbridge-chrome-extension/actions/workflows/ci.yml)
 
 <a href="https://www.buymeacoffee.com/mathieuvedie"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" height="32" /></a>
 
@@ -185,7 +185,7 @@ Limites connues sur Airbnb :
 
 Pas besoin de compte : un formulaire de deux minutes, [en français](https://tally.so/r/VpjJNa)
 ou [en anglais](https://tally.so/r/7Xbx59), accessible aussi depuis le bas du panneau.
-Les développeurs peuvent préférer les [issues GitHub](https://github.com/Gizmo091/bnb-calendar-prices-sync/issues).
+Les développeurs peuvent préférer les [issues GitHub](https://github.com/Gizmo091/bnbridge-chrome-extension/issues).
 
 ## Publication
 

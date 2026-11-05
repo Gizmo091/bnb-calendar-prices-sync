@@ -29,7 +29,7 @@ if you choose to give it, and it is used solely to follow up on your message.
 `chrome://extensions`. Exported files are ordinary files on your computer.
 
 **Contact.** Open an issue at
-https://github.com/Gizmo091/bnb-calendar-prices-sync/issues.
+https://github.com/Gizmo091/bnbridge-chrome-extension/issues.
 
 ---
 
@@ -68,4 +68,4 @@ depuis `chrome://extensions`. Les fichiers exportés sont des fichiers
 ordinaires sur votre ordinateur.
 
 **Contact.** Ouvrez un ticket sur
-https://github.com/Gizmo091/bnb-calendar-prices-sync/issues.
+https://github.com/Gizmo091/bnbridge-chrome-extension/issues.

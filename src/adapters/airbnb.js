@@ -303,7 +303,7 @@ export default {
             return await readCalendarFromApi(from, to);
         }
         catch (e) {
-            console.warn(`[bnb-calendar-prices-sync] lecture par l'API impossible (${e.message}), repli sur le calendrier affiché`);
+            console.warn(`[BnBridge] lecture par l'API impossible (${e.message}), repli sur le calendrier affiché`);
             return this.readCalendarFromDom({ from, to });
         }
     },

@@ -42,11 +42,11 @@ Les vacances scolaires et les jours fériés viennent de l'open data français (
 
 CONFIDENTIALITÉ
 
-BnBridge ne parle qu'à la page du calendrier ouverte dans votre navigateur et aux API publiques des vacances. Vos prix restent dans le stockage local de votre navigateur et dans les fichiers que vous exportez. Rien n'est envoyé, ni à nous ni à personne, il n'y a ni compte ni suivi. Politique complète : https://github.com/Gizmo091/bnb-calendar-prices-sync/blob/main/PRIVACY.md
+BnBridge ne parle qu'à la page du calendrier ouverte dans votre navigateur et aux API publiques des vacances. Vos prix restent dans le stockage local de votre navigateur et dans les fichiers que vous exportez. Rien n'est envoyé, ni à nous ni à personne, il n'y a ni compte ni suivi. Politique complète : https://github.com/Gizmo091/bnbridge-chrome-extension/blob/main/PRIVACY.md
 
 Une idée, un problème ? Un formulaire de deux minutes, sans compte : https://tally.so/r/VpjJNa
 
-BnBridge est gratuit et libre (https://github.com/Gizmo091/bnb-calendar-prices-sync). S'il vous épargne un après-midi de clics, vous pouvez m'offrir un café : https://www.buymeacoffee.com/mathieuvedie
+BnBridge est gratuit et libre (https://github.com/Gizmo091/bnbridge-chrome-extension). S'il vous épargne un après-midi de clics, vous pouvez m'offrir un café : https://www.buymeacoffee.com/mathieuvedie
 
 BnBridge est un projet indépendant, sans lien avec Airbnb, Abritel, Vrbo ou Expedia Group. Les interfaces des sites changent ; si une étape échoue, l'extension s'arrête sans rien écrire et dit dans le journal ce qu'elle a vu.
 
@@ -76,4 +76,4 @@ Données collectées : contenu de sites web (les prix et l'état de réservation
 
 Certifications : non vendues à des tiers, non utilisées à des fins étrangères à l'objectif unique, non utilisées pour évaluer la solvabilité ou à des fins de prêt.
 
-URL de la politique de confidentialité : https://github.com/Gizmo091/bnb-calendar-prices-sync/blob/main/PRIVACY.md
+URL de la politique de confidentialité : https://github.com/Gizmo091/bnbridge-chrome-extension/blob/main/PRIVACY.md
