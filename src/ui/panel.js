@@ -706,11 +706,14 @@ function renderPlan(p) {
     log(`Prévisualisation : ${p.ops.length} opérations, ${p.skipped.length} nuits ignorées`, 'ok');
 }
 
-/** Apparence d'une nuit du plan : bon prix, prix différent ou personnalisée, avec réservée et passée par-dessus. */
+/** Apparence d'une nuit du plan : bon prix, prix différent ou personnalisée, avec réservée, bloquée et passée par-dessus. */
 function planCell(date, cur, next, reason) {
     const flags = [];
     if (cur?.reserved) {
         flags.push('reserved');
+    }
+    else if (cur?.available === false) {
+        flags.push('blocked');
     }
     if (date < today()) {
         flags.push('past');
@@ -726,6 +729,9 @@ function planCell(date, cur, next, reason) {
     }
     else if (flags.includes('reserved')) {
         notes.push('réservée');
+    }
+    if (flags.includes('blocked')) {
+        notes.push('bloquée');
     }
     return {
         state: same ? 'ok' : custom ? 'custom' : 'diff',
@@ -750,13 +756,15 @@ function renderPlanGrid(p) {
             ? planCell(date, current[date], next, skipped.get(date))
             : { state: 'pending', title: `${describeDate(date)} · lecture en cours` };
     }
+    const seen = new Set(Object.values(cells).flatMap((c) => c.flags ?? []));
     state.planGrid = renderYearGrid($('plan-grid'), state.targetYear, cells, {
         legend: [
-            { state: 'ok', label: 'bon prix' },
+            { state: 'ok', label: 'bon prix, conservée' },
             { state: 'diff', label: 'à modifier' },
             { state: 'custom', label: 'personnalisée, conservée' },
-            { flags: ['reserved'], label: 'réservée' },
-            { state: 'ok', flags: ['past'], label: 'passée' },
+            ...(seen.has('reserved') || !p ? [{ flags: ['reserved'], label: 'réservée' }] : []),
+            ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
+            ...(seen.has('past') ? [{ state: 'ok', flags: ['past'], label: 'passée' }] : []),
         ],
     });
     return state.planGrid;
