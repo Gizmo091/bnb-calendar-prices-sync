@@ -236,6 +236,7 @@ export default {
     id: SITE,
     label: 'Airbnb',
 
+    calendarUrl: 'https://www.airbnb.fr/multicalendar/<id>',
     matches(hostname) {
         return /(^|\.)airbnb\.(fr|com)$/.test(hostname);
     },

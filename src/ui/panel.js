@@ -65,6 +65,11 @@ async function mountPanel(adapter) {
     };
 
     $('site-info').textContent = `${adapter.label}${info.listingId ? ` · annonce ${info.listingId}` : ''}${info.calibrated ? '' : ' · adaptateur non calibré'}`;
+    if (!info.listingId) {
+        $('notice').innerHTML = `Cette page n'est pas le calendrier d'une annonce. Ouvrez-le pour lire ou modifier les prix : <code>${adapter.calendarUrl}</code>`;
+        $('notice').hidden = false;
+        $('read').disabled = true;
+    }
 
     function log(message, level = 'info') {
         const line = document.createElement('span');

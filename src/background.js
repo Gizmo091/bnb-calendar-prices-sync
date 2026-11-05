@@ -13,8 +13,15 @@ chrome.action.onClicked.addListener(async (tab) => {
     }
     catch {
         // Pas de script de contenu ici : page hors Airbnb / Abritel, ou page à recharger.
-        await chrome.action.setBadgeText({ tabId: tab.id, text: '!' });
-        await chrome.action.setTitle({ tabId: tab.id, title: 'Ouvrez le calendrier hôte Airbnb ou Abritel (rechargez la page si besoin)' });
+        // On affiche l'avertissement dans la page ; sur une page où rien ne peut
+        // être injecté (chrome://, boutique), on se rabat sur le badge.
+        try {
+            await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['src/content/notice.js'] });
+        }
+        catch {
+            await chrome.action.setBadgeText({ tabId: tab.id, text: '!' });
+            await chrome.action.setTitle({ tabId: tab.id, title: 'Ouvrez le calendrier hôte Airbnb ou Abritel (rechargez la page si besoin)' });
+        }
     }
 });
 

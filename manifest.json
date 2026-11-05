@@ -5,7 +5,8 @@
   "description": "Exporte, importe et reporte d'une année sur l'autre les prix du calendrier Airbnb et Abritel.",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "https://*.airbnb.fr/*",

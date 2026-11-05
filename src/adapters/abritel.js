@@ -206,6 +206,7 @@ export default {
     /** Le formulaire sait enregistrer un tarif par nuit de la semaine sur toute une période. */
     supportsWeekdayPattern: true,
 
+    calendarUrl: 'https://www.abritel.fr/p/calendar/<id>',
     matches(hostname) {
         return /(^|\.)(abritel\.fr|vrbo\.com)$/.test(hostname);
     },
