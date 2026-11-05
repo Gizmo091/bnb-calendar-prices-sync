@@ -142,9 +142,16 @@ function resetUi() {
     $('plan-summary').textContent = '';
     $('plan-grid').hidden = true;
     $('skipped-details').hidden = true;
-    for (const id of ['export', 'plan', 'apply']) {
+    for (const id of ['export', 'plan']) {
         $(id).disabled = true;
     }
+    setApply(false, 'Lisez ou importez des prix, puis simulez');
+}
+
+/** Active le bouton d'application, ou l'inactive en disant pourquoi. */
+function setApply(enabled, reason = '') {
+    $('apply').disabled = !enabled;
+    $('apply-hint').textContent = enabled ? '' : reason;
 }
 
 function log(message, level = 'info') {
@@ -184,7 +191,7 @@ function setDays(days, year, origin) {
     renderDays(days, year);
     $('export').disabled = count === 0;
     $('plan').disabled = count === 0;
-    $('apply').disabled = true;
+    setApply(false, 'Simulez d\'abord');
     suggestBasePrice(days, year);
     log(`${count} nuits de ${year} ${origin}`, 'ok');
     persist();
@@ -377,15 +384,19 @@ function renderRules(rules) {
 /** Projette ou reprend les prix selon le mode choisi, puis compare au calendrier cible. */
 async function simulate() {
     $('plan').disabled = true;
-    $('apply').disabled = true;
+    setApply(false, 'Simulation en cours');
+    let ready = false;
     try {
-        const ready = $('mode').value === 'project' ? await project() : useAsIs();
+        ready = $('mode').value === 'project' ? await project() : useAsIs();
         if (ready) {
             await plan();
         }
     }
     finally {
         $('plan').disabled = false;
+        if (!ready) {
+            setApply(false, 'La simulation a échoué, voir le journal');
+        }
     }
 }
 
@@ -418,7 +429,15 @@ async function plan() {
         notBefore: today(),
     });
     renderPlan(state.plan);
-    $('apply').disabled = state.plan.ops.length === 0;
+    if (state.plan.ops.length) {
+        setApply(true);
+    }
+    else if (state.plan.skipped.length) {
+        setApply(false, 'Rien à modifier : les nuits restantes sont réservées ou personnalisées');
+    }
+    else {
+        setApply(false, 'Rien à modifier : toutes les nuits sont déjà au bon prix');
+    }
 }
 
 function renderPlan(p) {
@@ -494,7 +513,7 @@ function markOp(op, stateName) {
 async function apply() {
     const delay = Number($('delay').value) || 1500;
     const ops = state.plan.ops;
-    $('apply').disabled = true;
+    setApply(false, 'Application en cours');
     $('plan').disabled = true;
     applying = true;
     let done = 0;
@@ -524,6 +543,7 @@ async function apply() {
         : `Application interrompue après ${done}/${ops.length} opérations, voir le journal`;
     log(`${done}/${ops.length} opérations appliquées`, complete ? 'ok' : 'error');
     $('plan').disabled = false;
+    setApply(false, complete ? 'Appliqué, simulez à nouveau pour vérifier' : 'Interrompu, simulez à nouveau pour reprendre');
 }
 
 /* ---------- Câblage ---------- */
