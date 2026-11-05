@@ -5,7 +5,7 @@
  *
  * `cells` associe une date ISO à `{ level?, state?, flags?, title? }` :
  * - `level` entre 0 et 1, quantifié en cinq paliers de l'accent ;
- * - `state` parmi ok, diff, busy, error, unknown : la couleur de fond ;
+ * - `state` parmi ok, diff, custom, pending, busy, error, unknown : la couleur de fond ;
  * - `flags` parmi reserved, blocked, past : des marques qui se superposent
  *   à la couleur (hachures, atténuation) sans la remplacer ;
  * - `title` est l'infobulle de la case.
@@ -89,6 +89,18 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
             if (cell) {
                 cell.dataset.state = state;
             }
+        },
+        /** Remplace entièrement l'apparence d'une case (couleur, marques, infobulle). */
+        update(date, spec) {
+            const cell = index.get(date);
+            if (!cell) {
+                return;
+            }
+            for (const key of ['level', 'state', ...FLAGS]) {
+                delete cell.dataset[key];
+            }
+            cell.removeAttribute('title');
+            applySpec(cell, spec);
         },
     };
 }

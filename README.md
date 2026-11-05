@@ -20,8 +20,9 @@ dans votre propre session, à vitesse humaine, comme vous le feriez à la main.
   les nuits lointaines du calendrier et doit être confirmé par vous.
 - **Simulation obligatoire** avant application : la projection et la
   comparaison au calendrier cible se font d'un seul geste. Une grille de
-  l'année montre chaque nuit au bon prix ou à un prix différent, avec les
-  nuits réservées et passées marquées par-dessus, et se met à jour pendant
+  l'année apparaît aussitôt et se remplit mois par mois au fil de la lecture
+  du site, puis montre chaque nuit au bon prix ou à un prix différent, avec
+  les nuits réservées et passées marquées par-dessus, et se met à jour pendant
   l'application ; les nuits ignorées et les règles déduites de l'année source
   restent consultables en détail.
 - **Transfert entre plateformes** : « Appliquer tels quels » reprend un fichier

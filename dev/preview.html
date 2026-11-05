@@ -16,7 +16,7 @@
     import { renderYearGrid, priceLevels, describeDate } from '../src/ui/yearGrid.js';
     import { eachDay, weekday } from '../src/core/index.js';
 
-    // Paramètres : ?dark, ?state=unsupported|empty|loaded|planned|applied
+    // Paramètres : ?dark, ?state=unsupported|empty|loaded|reading|planned|applied
     const params = new URLSearchParams(location.search);
     const dark = params.has('dark');
     const stage = params.get('state') ?? 'applied';
@@ -72,10 +72,26 @@
         for (const [date, day] of Object.entries(days)) {
             cells[date] = { level: levels[date], flags: day.reserved ? ['reserved'] : day.available === false ? ['blocked'] : [], title: `${describeDate(date)} · ${day.price} €` };
         }
-        renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { level: 3, flags: ['reserved'], label: 'réservée' }, { level: 3, flags: ['blocked'], label: 'bloquée' }] });
+        renderYearGrid($('read-grid'), 2026, cells, { legend: [{ level: 1, label: `${min} €` }, { level: 5, label: `${max} €` }, { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }] });
         $('base-hint').textContent = 'Détecté : 160 €';
         $('export').disabled = $('plan').disabled = false;
         log('365 nuits de 2026 lues sur le site, lecture terminée', 'ok');
+    }
+    if (stage === 'reading') {
+        $('plan').disabled = true;
+        $('plan-summary').textContent = 'Lecture des prix de 2027 · 4/12 mois';
+        const pc = {};
+        for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'pending', title: 'lecture en cours' };
+        for (const d of eachDay('2027-01-01', '2027-04-30')) pc[d] = { state: 'ok' };
+        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = { state: 'custom' };
+        for (const d of eachDay('2027-02-06', '2027-03-07')) pc[d] = { state: 'diff' };
+        for (const d of eachDay('2027-02-13', '2027-02-20')) pc[d] = { state: 'ok', flags: ['reserved'] };
+        renderYearGrid($('plan-grid'), 2027, pc, { legend: [
+            { state: 'ok', label: 'bon prix' }, { state: 'diff', label: 'à modifier' }, { state: 'custom', label: 'personnalisée, conservée' },
+            { flags: ['reserved'], label: 'réservée' }, { state: 'ok', flags: ['past'], label: 'passée' },
+        ] });
+        $('apply-hint').textContent = 'Prévisualisation en cours';
+        log('Lecture des prix actuels de 2027 pour comparaison…');
     }
     if (stage === 'planned' || stage === 'applied') {
         const rules = [
@@ -113,7 +129,7 @@
         });
         renderYearGrid($('plan-grid'), 2027, pc, { legend: [
             { state: 'ok', label: 'bon prix' }, { state: 'diff', label: 'à modifier' }, { state: 'custom', label: 'personnalisée, conservée' },
-            { state: 'ok', flags: ['reserved'], label: 'réservée' }, { state: 'ok', flags: ['past'], label: 'passée' },
+            { flags: ['reserved'], label: 'réservée' }, { state: 'ok', flags: ['past'], label: 'passée' },
         ] });
         const ul = $('skipped-list');
         for (const d of eachDay('2027-01-02', '2027-01-09')) {

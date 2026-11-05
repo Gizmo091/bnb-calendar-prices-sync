@@ -226,8 +226,8 @@ function renderDays(days, year) {
     const legend = min === undefined ? [] : [
         { level: 1, label: `${min} €` },
         { level: 5, label: `${max} €` },
-        ...(seen.has('reserved') ? [{ level: 3, flags: ['reserved'], label: 'réservée' }] : []),
-        ...(seen.has('blocked') ? [{ level: 3, flags: ['blocked'], label: 'bloquée' }] : []),
+        ...(seen.has('reserved') ? [{ flags: ['reserved'], label: 'réservée' }] : []),
+        ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
     ];
     renderYearGrid($('read-grid'), year, cells, { legend });
 }
@@ -480,22 +480,54 @@ function syncMode() {
     $('target-year-field').hidden = $('mode').value !== 'project';
 }
 
+/** Les douze mois de l'année, en bornes ISO. */
+function monthRanges(year) {
+    return Array.from({ length: 12 }, (_, i) => {
+        const m = String(i + 1).padStart(2, '0');
+        const last = new Date(Date.UTC(year, i + 1, 0)).getUTCDate();
+        return { from: `${year}-${m}-01`, to: `${year}-${m}-${String(last).padStart(2, '0')}` };
+    });
+}
+
+/**
+ * Compare le calendrier cible aux prix proposés. La grille est affichée tout
+ * de suite, chaque nuit en attente, puis se remplit mois par mois au fil de
+ * la lecture du site : c'est elle qui fait office de progression.
+ */
 async function plan() {
     const basePrice = Number($('base-price').value);
-    const { from, to } = yearBounds(state.targetYear);
-    log(`Lecture des prix actuels de ${state.targetYear} pour comparaison…`);
-    let current;
-    try {
-        current = await callAdapter('readCalendar', { from, to });
+    const overwrite = $('overwrite').checked;
+    const year = state.targetYear;
+    const months = monthRanges(year);
+    state.current = {};
+    const grid = renderPlanGrid(null);
+    log(`Lecture des prix actuels de ${year} pour comparaison…`);
+    for (const [i, range] of months.entries()) {
+        $('plan-summary').textContent = `Lecture des prix de ${year} · ${i}/${months.length} mois`;
+        let chunk;
+        let failed = false;
+        try {
+            chunk = await callAdapter('readCalendar', range);
+        }
+        catch (e) {
+            log(`${e.message} — prévisualisation faite en supposant les nuits restantes au prix de base`, 'error');
+            chunk = Object.fromEntries(eachDay(range.from, months[months.length - 1].to).map((d) => [d, { price: basePrice, custom: false }]));
+            failed = true;
+        }
+        Object.assign(state.current, chunk);
+        for (const date of Object.keys(chunk)) {
+            const next = state.proposed[date];
+            if (next) {
+                grid.update(date, planCell(date, chunk[date], next, provisionalReason(chunk[date], next, { basePrice, overwrite })));
+            }
+        }
+        if (failed) {
+            break;
+        }
     }
-    catch (e) {
-        log(`${e.message} — simulation faite en supposant toutes les nuits au prix de base`, 'error');
-        current = Object.fromEntries(Object.keys(state.proposed).map((d) => [d, { price: basePrice, custom: false }]));
-    }
-    state.current = current;
-    state.plan = planUpdates(current, state.proposed, {
+    state.plan = planUpdates(state.current, state.proposed, {
         basePrice,
-        overwriteCustom: $('overwrite').checked,
+        overwriteCustom: overwrite,
         weekdayPattern: site?.supportsWeekdayPattern === true,
         notBefore: today(),
     });
@@ -510,6 +542,18 @@ async function plan() {
     else {
         setApply(false, 'Rien à modifier : toutes les nuits sont déjà au bon prix');
     }
+}
+
+/** Raison d'ignorer une nuit, estimée avant le plan définitif avec les mêmes règles. */
+function provisionalReason(cur, next, { basePrice, overwrite }) {
+    if (!cur || typeof cur.price !== 'number') {
+        return 'unknown';
+    }
+    if (cur.reserved) {
+        return 'reserved';
+    }
+    const isCustom = typeof cur.custom === 'boolean' ? cur.custom : cur.price !== basePrice;
+    return isCustom && !overwrite && cur.price !== next.price ? 'custom' : null;
 }
 
 function renderPlan(p) {
@@ -527,56 +571,61 @@ function renderPlan(p) {
     log(`Prévisualisation : ${p.ops.length} opérations, ${p.skipped.length} nuits ignorées`, 'ok');
 }
 
+/** Apparence d'une nuit du plan : bon prix, prix différent ou personnalisée, avec réservée et passée par-dessus. */
+function planCell(date, cur, next, reason) {
+    const flags = [];
+    if (cur?.reserved) {
+        flags.push('reserved');
+    }
+    if (date < today()) {
+        flags.push('past');
+    }
+    if (!cur || typeof cur.price !== 'number') {
+        return { state: 'unknown', flags, title: `${describeDate(date)} · absente du calendrier` };
+    }
+    const same = cur.price === next.price;
+    const custom = reason === 'custom';
+    const notes = [];
+    if (!same) {
+        notes.push(custom ? 'personnalisée, conservée' : flags.includes('reserved') ? 'réservée, conservée' : flags.includes('past') ? 'passée' : 'à modifier');
+    }
+    else if (flags.includes('reserved')) {
+        notes.push('réservée');
+    }
+    return {
+        state: same ? 'ok' : custom ? 'custom' : 'diff',
+        flags,
+        title: `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`,
+    };
+}
+
 /**
  * Grille du plan : chaque nuit de l'année cible est au bon prix ou à un prix
- * différent ; réservée ou passée s'ajoutent par-dessus. À l'application, les
- * nuits modifiées passent au bon prix.
+ * différent ; réservée ou passée s'ajoutent par-dessus. Sans plan (`null`),
+ * toutes les nuits sont en attente de lecture. À l'application, les nuits
+ * modifiées passent au bon prix.
  */
 function renderPlanGrid(p) {
     const cells = {};
     const proposed = state.proposed ?? {};
     const current = state.current ?? {};
-    const todayIso = today();
-    const skipped = new Map(p.skipped.map((s) => [s.date, s.reason]));
+    const skipped = new Map((p?.skipped ?? []).map((s) => [s.date, s.reason]));
     for (const [date, next] of Object.entries(proposed)) {
-        const cur = current[date];
-        const flags = [];
-        if (cur?.reserved) {
-            flags.push('reserved');
-        }
-        if (date < todayIso) {
-            flags.push('past');
-        }
-        if (!cur || typeof cur.price !== 'number') {
-            cells[date] = { state: 'unknown', flags, title: `${describeDate(date)} · absente du calendrier` };
-            continue;
-        }
-        const same = cur.price === next.price;
-        const custom = skipped.get(date) === 'custom';
-        const notes = [];
-        if (!same) {
-            notes.push(custom ? 'personnalisée, conservée' : flags.includes('reserved') ? 'réservée, conservée' : flags.includes('past') ? 'passée' : 'à modifier');
-        }
-        else if (flags.includes('reserved')) {
-            notes.push('réservée');
-        }
-        cells[date] = {
-            state: same ? 'ok' : custom ? 'custom' : 'diff',
-            flags,
-            title: `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`,
-        };
+        cells[date] = p
+            ? planCell(date, current[date], next, skipped.get(date))
+            : { state: 'pending', title: `${describeDate(date)} · lecture en cours` };
     }
     state.planGrid = renderYearGrid($('plan-grid'), state.targetYear, cells, {
         legend: [
             { state: 'ok', label: 'bon prix' },
             { state: 'diff', label: 'à modifier' },
             { state: 'custom', label: 'personnalisée, conservée' },
-            { state: 'ok', flags: ['reserved'], label: 'réservée' },
+            { flags: ['reserved'], label: 'réservée' },
             { state: 'ok', flags: ['past'], label: 'passée' },
         ],
     });
+    return state.planGrid;
 }
-
 
 function markOp(op, stateName) {
     for (const date of eachDay(op.from, op.to)) {

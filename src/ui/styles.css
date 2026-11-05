@@ -256,18 +256,21 @@ label.file input { display: none; }
 .cell[data-state="ok"] { background-color: var(--accent); }
 .cell[data-state="diff"] { background-color: color-mix(in oklab, var(--fg) 18%, var(--raised)); }
 .cell[data-state="custom"] { background-color: color-mix(in oklab, var(--fg) 55%, var(--raised)); }
+.cell[data-state="pending"] { background-color: var(--raised); animation: busy 900ms var(--ease) infinite alternate; }
 .cell[data-state="busy"] { background-color: color-mix(in oklab, var(--accent) 60%, var(--raised)); animation: busy 900ms var(--ease) infinite alternate; }
 .cell[data-state="error"] { background-color: var(--negative); }
 .cell[data-state="unknown"] { background-color: transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
 /* Marques complémentaires : elles se superposent à la couleur sans la remplacer. */
 .cell[data-reserved] { background-image: repeating-linear-gradient(135deg, rgba(0, 0, 0, .5) 0 2px, transparent 2px 4px); }
-.cell[data-blocked] { background-image: repeating-linear-gradient(135deg, rgba(0, 0, 0, .2) 0 2px, transparent 2px 4px); }
+.cell[data-blocked] { background-image: repeating-linear-gradient(45deg, rgba(0, 0, 0, .2) 0 2px, transparent 2px 4px); }
 .cell[data-past] { opacity: .35; }
 @media (prefers-color-scheme: dark) {
     .cell[data-reserved] { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .5) 0 2px, transparent 2px 4px); }
-    .cell[data-blocked] { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .2) 0 2px, transparent 2px 4px); }
+    .cell[data-blocked] { background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, .2) 0 2px, transparent 2px 4px); }
 }
-@keyframes busy { to { opacity: .55; } }
+@keyframes busy { to { opacity: .4; } }
+/* Pastille de légende d'une marque seule : les hachures sur fond vide. */
+.legend .cell:not([data-state]):not([data-level]) { background-color: transparent; }
 
 .legend {
     grid-column: 1 / -1;
