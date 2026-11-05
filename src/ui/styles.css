@@ -150,7 +150,7 @@ span.hint { margin: 0; }
 .field { display: inline-flex; align-items: center; gap: 8px; color: var(--fg-2); white-space: nowrap; }
 .check { display: inline-flex; align-items: center; gap: 8px; color: var(--fg); cursor: pointer; }
 
-input[type="number"] {
+input[type="number"], input[type="text"] {
     height: 32px;
     width: 72px;
     padding: 0 8px;
@@ -162,7 +162,7 @@ input[type="number"] {
     font-variant-numeric: tabular-nums;
     transition: border-color 160ms var(--ease);
 }
-input[type="number"]:hover { border-color: var(--fg-3); }
+input[type="number"]:hover, input[type="text"]:hover { border-color: var(--fg-3); }
 input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
 select {
     height: 32px;

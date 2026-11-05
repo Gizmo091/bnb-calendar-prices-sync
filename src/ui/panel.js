@@ -344,7 +344,10 @@ async function project() {
         }
         state.rules = inferRules(state.days, labelYear(state.year, ctxSource));
         renderRules(state.rules);
-        const factor = Number($('factor').value) || 1;
+        const factor = readFactor();
+        if (factor === null) {
+            return false;
+        }
         const rounding = Number($('rounding').value) || 1;
         state.proposed = scalePrices(generateYear(targetYear, state.rules, ctxTarget, basePrice), factor, rounding);
         state.targetYear = targetYear;
@@ -360,7 +363,10 @@ async function project() {
 
 /** Même année, sans projection : les nuits chargées deviennent les prix proposés. */
 function useAsIs() {
-    const factor = Number($('factor').value) || 1;
+    const factor = readFactor();
+    if (factor === null) {
+        return false;
+    }
     const rounding = Number($('rounding').value) || 1;
     const proposed = {};
     for (const [date, day] of Object.entries(state.days)) {
@@ -392,6 +398,17 @@ function renderRules(rules) {
 }
 
 /* ---------- 4. Simulation et application ---------- */
+
+/** Coefficient saisi avec une virgule ou un point ; null et message si la saisie n'est pas un nombre positif. */
+function readFactor() {
+    const raw = $('factor').value.trim().replace(',', '.');
+    const factor = raw === '' ? 1 : Number(raw);
+    if (!Number.isFinite(factor) || factor <= 0) {
+        log(`Coefficient invalide : « ${$('factor').value} », attendu un nombre comme 1,05`, 'error');
+        return null;
+    }
+    return factor;
+}
 
 /** Projette ou reprend les prix selon le mode choisi, puis compare au calendrier cible. */
 async function simulate() {
