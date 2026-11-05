@@ -35,7 +35,13 @@
     .frame.marquee { width: 1400px; height: 560px; display: flex; align-items: center; gap: 56px; padding: 0 80px; box-sizing: border-box; }
     .marquee .copy h1 { font-size: 48px; }
     .frame.social { width: 1280px; height: 640px; display: flex; align-items: center; gap: 56px; padding: 0 72px; box-sizing: border-box; }
-    .social .copy h1 { font-size: 44px; }
+    /* L'image de partage est vue en petit sur les réseaux : tout y est plus gros. */
+    .social .copy .wordmark svg { width: 56px; height: 56px; }
+    .social .copy .wordmark b { font-size: 32px; }
+    .social .copy .wordmark { margin-bottom: 32px; }
+    .social .copy h1 { font-size: 58px; line-height: 1.08; margin-bottom: 24px; }
+    .social .copy ul { font-size: 23px; gap: 10px; }
+    .social .copy li::before { width: 12px; height: 12px; margin-top: 11px; }
     .social .panel { height: 560px; zoom: 1; }
     .social .panel iframe { height: 560px; }
     .marquee .panel { height: 480px; zoom: 1; }
