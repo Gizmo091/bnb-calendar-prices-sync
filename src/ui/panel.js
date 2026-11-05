@@ -107,15 +107,16 @@ async function bind(tabId) {
         plan: null,
         planGrid: null,
     };
-    const listing = describeListing(info.listingId, info.name);
-    $('site-info').textContent = `${info.label}${listing ? ` · ${listing}` : ''}${info.calibrated ? '' : ' · adaptateur non calibré'}`;
-    $('site-info').title = $('site-info').textContent;
+    showSiteInfo();
+    if (info.listingId && !info.name) {
+        watchListingName(tabId);
+    }
     if (!info.listingId) {
         $('notice').innerHTML = `Cette page n'est pas le calendrier d'une annonce. Ouvrez-le pour lire ou modifier les prix : <code>${info.calendarUrl ?? ''}</code>`;
         $('notice').hidden = false;
         $('read').disabled = true;
     }
-    log(`Onglet lié : ${info.label}${listing ? ` · ${listing}` : ''}`);
+    log(`Onglet lié : ${site.label}${describeListing(info.listingId, info.name) ? ` · ${describeListing(info.listingId, info.name)}` : ''}`);
 
     // Les prix conservés ne reviennent que sur l'annonce où ils ont été chargés.
     const saved = info.listingId ? (await chrome.storage.local.get(storageKey))[storageKey] : null;
@@ -205,6 +206,40 @@ function lockSteps(locked) {
 }
 
 const SITE_LABELS = { airbnb: 'Airbnb', abritel: 'Abritel' };
+const NAME_RETRY_MS = [1000, 2000, 4000, 8000];
+
+function showSiteInfo() {
+    const listing = describeListing(state?.listingId, state?.listingName);
+    $('site-info').textContent = `${site.label}${listing ? ` · ${listing}` : ''}${site.calibrated ? '' : ' · adaptateur non calibré'}`;
+    $('site-info').title = $('site-info').textContent;
+}
+
+/**
+ * Le nom de l'annonce arrive parfois après la liaison, quand le site finit
+ * d'écrire son titre : on redemande quelques fois, tant que l'onglet lié
+ * est le même.
+ */
+async function refreshListingName() {
+    const info = await callAdapter('info').catch(() => null);
+    if (info?.name && info.listingId === state?.listingId) {
+        state.listingName = info.name;
+        showSiteInfo();
+        return true;
+    }
+    return false;
+}
+
+async function watchListingName(tabId) {
+    for (const delay of NAME_RETRY_MS) {
+        await new Promise((r) => setTimeout(r, delay));
+        if (boundTab !== tabId || state?.listingName) {
+            return;
+        }
+        if (await refreshListingName()) {
+            return;
+        }
+    }
+}
 
 /** « Nom de l'annonce » ou « annonce 123 », selon ce que le site a donné. */
 function describeListing(listingId, name) {
@@ -352,7 +387,10 @@ async function readCalendar() {
     }
 }
 
-function exportJson() {
+async function exportJson() {
+    if (!state.listingName) {
+        await refreshListingName();
+    }
     const doc = createExport({
         site: state.site,
         listingId: state.listingId,
