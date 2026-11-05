@@ -56,10 +56,15 @@ src/
   core/        logique métier, indépendante du navigateur (testée en Node)
   adapters/    lecture et écriture du calendrier de chaque site
   content/     script de contenu qui charge l'adaptateur et le panneau
-  ui/          panneau injecté dans la page (Shadow DOM)
+  ui/          panneau injecté dans la page (Shadow DOM) : gabarit, styles, grille de l'année
   background.js
+dev/preview.html  aperçu du panneau hors extension (servir le dépôt en HTTP, `?dark`, `?state=…`)
 test/
 ```
+
+Le panneau garde un chrome neutre ; la seule couleur sert au bouton « Appliquer » et à la
+grille de l'année, qui montre les prix chargés puis l'état de chaque nuit du plan. La mise en
+forme suit la méthode [unslop](https://github.com/heydamir/unslop) de Damir Sokolovsky (CC BY 4.0).
 
 ## État
 
