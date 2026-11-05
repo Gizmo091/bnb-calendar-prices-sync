@@ -262,13 +262,24 @@ label.file input { display: none; }
 .cell[data-state="unknown"] { background-color: transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
 /* Marques complémentaires : elles se superposent à la couleur sans la remplacer. */
 .cell[data-reserved] { background-image: repeating-linear-gradient(135deg, rgba(0, 0, 0, .5) 0 2px, transparent 2px 4px); }
-.cell[data-blocked] { background-image: repeating-linear-gradient(45deg, rgba(0, 0, 0, .2) 0 2px, transparent 2px 4px); }
+/* Bloquée : une croix de coin en coin. */
+.cell[data-blocked] { --cross: rgba(0, 0, 0, .35); background-image: linear-gradient(45deg, transparent calc(50% - .5px), var(--cross) calc(50% - .5px), var(--cross) calc(50% + .5px), transparent calc(50% + .5px)), linear-gradient(-45deg, transparent calc(50% - .5px), var(--cross) calc(50% - .5px), var(--cross) calc(50% + .5px), transparent calc(50% + .5px)); }
 .cell[data-past] { opacity: .35; }
 @media (prefers-color-scheme: dark) {
     .cell[data-reserved] { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .5) 0 2px, transparent 2px 4px); }
-    .cell[data-blocked] { background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, .2) 0 2px, transparent 2px 4px); }
+    .cell[data-blocked] { --cross: rgba(255, 255, 255, .4); }
 }
 @keyframes busy { to { opacity: .4; } }
+/* Révélation d'une case : elle garde l'air d'attente jusqu'à son tour, puis prend sa couleur d'un petit bond. */
+.year-grid .cell.reveal { animation: reveal 320ms var(--ease) backwards; }
+@keyframes reveal {
+    from { background-color: var(--raised); background-image: none; transform: scale(.4); opacity: .6; }
+    60% { transform: scale(1.25); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .year-grid .cell.reveal { animation: none; }
+    .cell[data-state="pending"] { animation: none; opacity: .6; }
+}
 /* Pastille de légende d'une marque seule : les hachures sur fond vide. */
 .legend .cell:not([data-state]):not([data-level]) { background-color: transparent; }
 

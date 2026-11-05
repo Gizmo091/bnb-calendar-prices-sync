@@ -501,6 +501,7 @@ async function plan() {
     const months = monthRanges(year);
     state.current = {};
     const grid = renderPlanGrid(null);
+    const reveal = revealQueue();
     log(`Lecture des prix actuels de ${year} pour comparaison…`);
     for (const [i, range] of months.entries()) {
         $('plan-summary').textContent = `Lecture des prix de ${year} · ${i}/${months.length} mois`;
@@ -515,12 +516,13 @@ async function plan() {
             failed = true;
         }
         Object.assign(state.current, chunk);
-        for (const date of Object.keys(chunk)) {
+        for (const date of Object.keys(chunk).sort()) {
             const next = state.proposed[date];
             if (next) {
-                grid.update(date, planCell(date, chunk[date], next, provisionalReason(chunk[date], next, { basePrice, overwrite })));
+                grid.update(date, planCell(date, chunk[date], next, provisionalReason(chunk[date], next, { basePrice, overwrite })), { delay: reveal() });
             }
         }
+        await reveal.settled();
         if (failed) {
             break;
         }
@@ -542,6 +544,23 @@ async function plan() {
     else {
         setApply(false, 'Rien à modifier : toutes les nuits sont déjà au bon prix');
     }
+}
+
+const REVEAL_STEP_MS = 14;
+
+/**
+ * File de révélation : chaque appel réserve le créneau suivant, à partir de
+ * maintenant ou de la fin du précédent, pour que les cases se dévoilent une à
+ * une sans à-coup d'un mois à l'autre. `settled()` attend la fin de la file.
+ */
+function revealQueue() {
+    let cursor = performance.now();
+    const next = () => {
+        cursor = Math.max(cursor, performance.now()) + REVEAL_STEP_MS;
+        return cursor - performance.now();
+    };
+    next.settled = () => new Promise((resolve) => setTimeout(resolve, Math.max(0, cursor - performance.now())));
+    return next;
 }
 
 /** Raison d'ignorer une nuit, estimée avant le plan définitif avec les mêmes règles. */

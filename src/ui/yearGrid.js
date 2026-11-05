@@ -90,8 +90,13 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
                 cell.dataset.state = state;
             }
         },
-        /** Remplace entièrement l'apparence d'une case (couleur, marques, infobulle). */
-        update(date, spec) {
+        /**
+         * Remplace entièrement l'apparence d'une case (couleur, marques,
+         * infobulle). Avec `delay`, la case garde son air d'attente puis se
+         * révèle d'un petit mouvement à l'instant dit, ce qui permet de
+         * dévoiler les nuits une à une.
+         */
+        update(date, spec, { delay = null } = {}) {
             const cell = index.get(date);
             if (!cell) {
                 return;
@@ -100,7 +105,17 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
                 delete cell.dataset[key];
             }
             cell.removeAttribute('title');
+            cell.classList.remove('reveal');
             applySpec(cell, spec);
+            if (delay !== null) {
+                void cell.offsetWidth;
+                cell.style.animationDelay = `${Math.max(0, Math.round(delay))}ms`;
+                cell.classList.add('reveal');
+                cell.addEventListener('animationend', () => {
+                    cell.classList.remove('reveal');
+                    cell.style.animationDelay = '';
+                }, { once: true });
+            }
         },
     };
 }
