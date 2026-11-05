@@ -108,6 +108,27 @@ button.icon svg { width: 16px; height: 16px; }
 .progress.failed .track i { background: var(--negative); }
 .progress .count { font: 12px/16px var(--mono); color: var(--fg-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
+/* ---------- Réglages d'une étape ---------- */
+
+.section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.section-head h2 { flex: 1; margin: 0; }
+details.settings { position: relative; margin: 0; }
+.icon-summary {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; margin: -4px 0; border-radius: 8px; color: var(--fg-3); cursor: pointer;
+}
+.icon-summary::before { content: none; }
+.icon-summary:hover, details[open] > .icon-summary { background: var(--raised); color: var(--fg); }
+.icon-summary svg { width: 16px; height: 16px; }
+.popover {
+    position: absolute; top: 100%; right: 0; z-index: 2;
+    display: flex; flex-direction: column; gap: 8px;
+    width: 280px; margin-top: 4px; padding: 12px;
+    border: 1px solid var(--hairline); border-radius: 12px;
+    background: var(--surface); box-shadow: var(--shadow);
+}
+.popover .field { justify-content: space-between; white-space: normal; }
+
 /* ---------- Texte ---------- */
 
 .help { position: relative; display: inline-flex; align-self: center; }

@@ -48,7 +48,23 @@
     </section>
 
     <section>
-      <h2><span class="step">03</span>Simuler</h2>
+      <div class="section-head">
+        <h2><span class="step">03</span>Appliquer le tarif</h2>
+        <details class="settings" id="settings">
+          <summary class="icon-summary" title="Réglages" aria-label="Réglages">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          </summary>
+          <div class="popover">
+            <label class="field">Coefficient d'augmentation <input id="factor" type="text" inputmode="decimal" value="1" placeholder="1,05"></label>
+            <label class="field">Arrondi
+              <select id="rounding">
+                <option value="1">à l'unité</option>
+                <option value="10">à la dizaine</option>
+              </select>
+            </label>
+          </div>
+        </details>
+      </div>
       <div class="row">
         <select id="mode">
           <option value="project">Reporter les tarifs sur une autre année</option>
@@ -57,14 +73,10 @@
         <label class="field" id="target-year-field">Vers <input id="target-year" type="number" min="2020" max="2100"></label>
       </div>
       <div class="row">
-        <label class="field">Coefficient <input id="factor" type="text" inputmode="decimal" value="1" placeholder="1,05"></label>
-        <label class="field">Arrondi <input id="rounding" type="number" min="1" step="1" value="1"></label>
-      </div>
-      <div class="row">
         <label class="check"><input id="overwrite" type="checkbox"> Écraser aussi les prix personnalisés</label>
       </div>
       <div class="row">
-        <button id="plan" type="button" disabled>Simuler</button>
+        <button id="plan" type="button" disabled>Prévisualiser les tarifs appliqués</button>
       </div>
       <p id="plan-summary" class="hint"></p>
       <div id="plan-grid" class="year-grid" hidden></div>
@@ -86,10 +98,10 @@
     </section>
 
     <section>
-      <h2><span class="step">04</span>Appliquer</h2>
+      <h2><span class="step">04</span>Enregistrer sur le site</h2>
       <div class="row">
         <label class="field">Pause (ms) <input id="delay" type="number" min="200" step="100" value="1500"></label>
-        <button id="apply" type="button" disabled class="primary">Appliquer sur le site</button>
+        <button id="apply" type="button" disabled class="primary">Enregistrer sur le site</button>
       </div>
       <div id="progress" class="progress" hidden role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="track"><i></i></div>

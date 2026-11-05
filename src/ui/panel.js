@@ -145,7 +145,7 @@ function resetUi() {
     for (const id of ['export', 'plan']) {
         $(id).disabled = true;
     }
-    setApply(false, 'Lisez ou importez des prix, puis simulez');
+    setApply(false, 'Lisez ou importez des prix, puis prévisualisez');
     $('progress').hidden = true;
 }
 
@@ -203,7 +203,7 @@ function setDays(days, year, origin) {
     renderDays(days, year);
     $('export').disabled = count === 0;
     $('plan').disabled = count === 0;
-    setApply(false, 'Simulez d\'abord');
+    setApply(false, 'Prévisualisez d\'abord');
     suggestBasePrice(days, year);
     log(`${count} nuits de ${year} ${origin}`, 'ok');
     persist();
@@ -329,7 +329,7 @@ async function importJson(file) {
 async function project() {
     const basePrice = Number($('base-price').value);
     if (!basePrice) {
-        log('Renseignez le prix de base avant de simuler', 'error');
+        log('Renseignez le prix de base avant de prévisualiser', 'error');
         return false;
     }
     const targetYear = Number($('target-year').value);
@@ -413,7 +413,7 @@ function readFactor() {
 /** Projette ou reprend les prix selon le mode choisi, puis compare au calendrier cible. */
 async function simulate() {
     $('plan').disabled = true;
-    setApply(false, 'Simulation en cours');
+    setApply(false, 'Prévisualisation en cours');
     let ready = false;
     try {
         ready = $('mode').value === 'project' ? await project() : useAsIs();
@@ -424,7 +424,7 @@ async function simulate() {
     finally {
         $('plan').disabled = false;
         if (!ready) {
-            setApply(false, 'La simulation a échoué, voir le journal');
+            setApply(false, 'La prévisualisation a échoué, voir le journal');
         }
     }
 }
@@ -482,7 +482,7 @@ function renderPlan(p) {
     }
     $('skipped-details').hidden = p.skipped.length === 0;
     renderPlanGrid(p);
-    log(`Simulation : ${p.ops.length} opérations, ${p.skipped.length} nuits ignorées`, 'ok');
+    log(`Prévisualisation : ${p.ops.length} opérations, ${p.skipped.length} nuits ignorées`, 'ok');
 }
 
 /**
@@ -555,7 +555,7 @@ async function apply() {
     setProgress(0, totalNights);
     try {
         for (const op of ops) {
-            $('plan-summary').textContent = `Application en cours : ${describeOp(op)} du ${op.from} au ${op.to}`;
+            $('plan-summary').textContent = `Enregistrement en cours : ${describeOp(op)} du ${op.from} au ${op.to}`;
             markOp(op, 'busy');
             try {
                 await callAdapter('applyPrice', op);
@@ -579,11 +579,11 @@ async function apply() {
     }
     const complete = done === ops.length && !failed;
     $('plan-summary').textContent = complete
-        ? `${done} opérations appliquées, ${state.plan.changed} nuits au bon prix`
-        : `Application interrompue après ${done}/${ops.length} opérations, voir le journal`;
+        ? `${done} opérations enregistrées, ${state.plan.changed} nuits au bon prix`
+        : `Enregistrement interrompu après ${done}/${ops.length} opérations, voir le journal`;
     log(`${done}/${ops.length} opérations appliquées`, complete ? 'ok' : 'error');
     $('plan').disabled = false;
-    setApply(false, complete ? 'Appliqué, simulez à nouveau pour vérifier' : 'Interrompu, simulez à nouveau pour reprendre');
+    setApply(false, complete ? 'Enregistré, prévisualisez à nouveau pour vérifier' : 'Interrompu, prévisualisez à nouveau pour reprendre');
 }
 
 /* ---------- Câblage ---------- */
@@ -594,6 +594,12 @@ $('read').addEventListener('click', readCalendar);
 $('export').addEventListener('click', exportJson);
 $('import').addEventListener('change', (e) => e.target.files[0] && importJson(e.target.files[0]));
 $('mode').addEventListener('change', syncMode);
+document.addEventListener('click', (e) => {
+    const settings = $('settings');
+    if (settings.open && !settings.contains(e.target)) {
+        settings.open = false;
+    }
+});
 $('plan').addEventListener('click', simulate);
 $('apply').addEventListener('click', apply);
 
