@@ -8,7 +8,9 @@
  * - `state` parmi ok, diff, custom, pending, next, busy, error, unknown : la couleur de fond ;
  * - `flags` parmi reserved, blocked, past : des marques qui se superposent
  *   à la couleur (hachures, atténuation) sans la remplacer ;
- * - `title` est l'infobulle de la case, affichée par la grille elle-même.
+ * - `title` est l'infobulle de la case, affichée par la grille elle-même ;
+ * - `selectable` : la nuit peut être choisie au clic ou au glisser, quand la
+ *   grille a un `onSelect`.
  */
 import { eachDay, yearBounds, weekday } from '../core/index.js';
 
@@ -29,6 +31,77 @@ function applySpec(cell, spec) {
     if (spec.title) {
         cell.dataset.tip = spec.title;
     }
+    if (spec.selectable) {
+        cell.dataset.selectable = '';
+    }
+}
+
+/**
+ * Sélection de nuits : un clic choisit ou retire une nuit, un glisser étend
+ * le geste à toutes les nuits entre la première touchée et la nuit courante,
+ * dans l'ordre du calendrier. Seules les cases `selectable` comptent.
+ */
+const selections = new WeakMap();
+
+function attachSelection(el, index, onSelect) {
+    selections.get(el)?.abort();
+    const controller = new AbortController();
+    selections.set(el, controller);
+    const { signal } = controller;
+    const dates = [...index.keys()];
+    const position = new Map(dates.map((date, i) => [date, i]));
+    const selected = () => dates.filter((date) => 'selected' in index.get(date).dataset);
+    const cellAt = (event) => {
+        const cell = document.elementFromPoint(event.clientX, event.clientY)?.closest('.cell[data-selectable]');
+        return cell && cell.parentElement === el ? cell : null;
+    };
+    let drag = null;
+    const paint = (current) => {
+        const [a, b] = [position.get(drag.anchor), position.get(current)].sort((x, y) => x - y);
+        const next = new Set(drag.base);
+        for (const date of dates.slice(a, b + 1)) {
+            if ('selectable' in index.get(date).dataset) {
+                next[drag.adding ? 'add' : 'delete'](date);
+            }
+        }
+        for (const date of dates) {
+            index.get(date).toggleAttribute('data-selected', next.has(date));
+        }
+    };
+    el.addEventListener('pointerdown', (event) => {
+        const cell = event.button === 0 ? cellAt(event) : null;
+        if (!cell) {
+            return;
+        }
+        event.preventDefault();
+        const anchor = cell.dataset.date;
+        const base = new Set(selected());
+        drag = { anchor, base, adding: !base.has(anchor) };
+        el.setPointerCapture(event.pointerId);
+        paint(anchor);
+    }, { signal });
+    el.addEventListener('pointermove', (event) => {
+        const cell = drag ? cellAt(event) : null;
+        if (cell) {
+            paint(cell.dataset.date);
+        }
+    }, { signal });
+    const end = () => {
+        if (drag) {
+            drag = null;
+            onSelect(selected());
+        }
+    };
+    el.addEventListener('pointerup', end, { signal });
+    el.addEventListener('pointercancel', end, { signal });
+    return {
+        selected,
+        clear() {
+            for (const date of dates) {
+                delete index.get(date).dataset.selected;
+            }
+        },
+    };
 }
 
 /**
@@ -76,11 +149,14 @@ const LEVELS = 5;
 
 /**
  * `legend` liste des entrées `{ label, state?, level?, flags? }` rendues comme
- * une case, ou `{ scale: [min, max] }` : une réglette des cinq paliers de prix.
+ * une case, ou `{ scale: [min, max], label? }` : une réglette des cinq paliers
+ * de prix. Avec `onSelect`, les nuits `selectable` se choisissent au clic ou
+ * au glisser et la fonction reçoit les dates choisies à chaque geste.
  */
-export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
+export function renderYearGrid(el, year, cells, { legend = [], onSelect = null } = {}) {
     el.innerHTML = '';
     el.hidden = false;
+    el.classList.toggle('selectable', Boolean(onSelect));
     attachTooltip(el);
     const { from, to } = yearBounds(year);
     const index = new Map();
@@ -98,6 +174,7 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
         }
         const cell = document.createElement('i');
         cell.className = 'cell';
+        cell.dataset.date = date;
         cell.style.gridColumn = String(Number(date.slice(8, 10)) + 1);
         cell.style.gridRow = String(m + 1);
         if (weekday(date) === 6) {
@@ -131,7 +208,7 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
                 }
                 li.className = 'range';
                 li.title = `Prix des nuits, du plus bas (${min} €) au plus haut (${max} €)`;
-                li.append(document.createTextNode(`${min} €`), strip, document.createTextNode(`${max} €`));
+                li.append(document.createTextNode(`${min} €`), strip, document.createTextNode(`${max} €${item.label ? ` ${item.label}` : ''}`));
                 ul.append(li);
                 continue;
             }
@@ -146,13 +223,22 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
         }
         el.append(ul);
     }
+    const selection = onSelect ? attachSelection(el, index, onSelect) : null;
     return {
-        setState(date, state) {
+        /** Change la couleur d'état ; `selectable: false` retire la nuit de la sélection et des nuits choisissables. */
+        setState(date, state, { selectable = true } = {}) {
             const cell = index.get(date);
-            if (cell) {
-                cell.dataset.state = state;
+            if (!cell) {
+                return;
+            }
+            cell.dataset.state = state;
+            if (!selectable) {
+                delete cell.dataset.selectable;
+                delete cell.dataset.selected;
             }
         },
+        selected: () => selection?.selected() ?? [],
+        clearSelection: () => selection?.clear(),
         /**
          * Remplace entièrement l'apparence d'une case (couleur, marques,
          * infobulle). Avec `delay`, la case garde son air d'attente puis se
@@ -164,7 +250,7 @@ export function renderYearGrid(el, year, cells, { legend = [] } = {}) {
             if (!cell) {
                 return;
             }
-            for (const key of ['level', 'state', ...FLAGS]) {
+            for (const key of ['level', 'state', 'selectable', 'selected', ...FLAGS]) {
                 delete cell.dataset[key];
             }
             delete cell.dataset.tip;

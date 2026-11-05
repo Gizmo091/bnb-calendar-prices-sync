@@ -1,6 +1,7 @@
 /**
  * Panneau latéral de Chrome. Enchaînement : lire ou importer les prix →
- * confirmer le prix de base → projeter sur l'année suivante → simuler → appliquer.
+ * confirmer le prix de base → projeter sur l'année suivante → simuler →
+ * appliquer, tout ou seulement les nuits choisies sur la grille.
  *
  * Le panneau est lié à l'onglet actif au moment de son ouverture et suit les
  * changements d'onglet tant qu'aucune application n'est en cours. La page est
@@ -11,7 +12,7 @@ import {
     yearBounds, today, yearOf, addMonths,
     labelYear, describeRuleKey,
     inferRules, generateYear,
-    detectBasePrice, planUpdates,
+    detectBasePrice, planUpdates, opsForDates,
     createExport, validateExport, scalePrices, exportFileName,
     describeOp, eachDay,
 } from '../core/index.js';
@@ -106,6 +107,7 @@ async function bind(tabId) {
         targetYear: null,
         plan: null,
         planGrid: null,
+        applied: null,
     };
     showSiteInfo();
     if (info.listingId && !info.name) {
@@ -167,10 +169,18 @@ function setProgress(doneNights, totalNights, { failed = false } = {}) {
     el.querySelector('.count').textContent = `${doneNights}/${totalNights} nuits`;
 }
 
-/** Active le bouton d'application, ou l'inactive en disant pourquoi. */
+/** Active les boutons d'application, ou les inactive en disant pourquoi. */
 function setApply(enabled, reason = '') {
     $('apply').disabled = !enabled;
-    $('apply-hint').textContent = enabled ? '' : reason;
+    $('apply-hint').textContent = enabled ? 'Cliquez ou glissez sur la grille pour n\'appliquer qu\'une partie des nuits' : reason;
+    syncSelectionButton();
+}
+
+/** Le bouton de la sélection suit le bouton principal et le nombre de nuits choisies. */
+function syncSelectionButton() {
+    const count = state?.planGrid?.selected().length ?? 0;
+    $('apply-selection').disabled = $('apply').disabled || count === 0;
+    $('apply-selection').textContent = count ? `Appliquer à la sélection (${count} nuit${count > 1 ? 's' : ''})` : 'Appliquer à la sélection';
 }
 
 function log(message, level = 'info') {
@@ -529,7 +539,7 @@ async function saveSettings() {
             factor: $('factor').value,
             rounding: $('rounding').value,
             specialDays: readSpecialDays(),
-            delay: $('delay').value,
+            showLog: $('journal').open,
         },
     });
 }
@@ -550,8 +560,8 @@ async function restoreSettings() {
             input.checked = saved.specialDays.includes(Number(input.value));
         }
     }
-    if (saved.delay !== undefined) {
-        $('delay').value = saved.delay;
+    if (typeof saved.showLog === 'boolean') {
+        $('journal').open = saved.showLog;
     }
 }
 
@@ -615,6 +625,7 @@ async function plan() {
     const months = monthRanges(year);
     state.current = {};
     const grid = renderPlanGrid(null);
+    const { levels } = priceLevels(state.proposed);
     const reveal = revealQueue();
     log(`Lecture des prix actuels de ${year} pour comparaison…`);
     for (const [i, range] of months.entries()) {
@@ -634,7 +645,7 @@ async function plan() {
         for (const date of Object.keys(chunk).sort()) {
             const next = state.proposed[date];
             if (next) {
-                grid.update(date, planCell(date, chunk[date], next, provisionalReason(chunk[date], next, { basePrice, overwrite }), { basePrice }), { delay: reveal() });
+                grid.update(date, planCell(date, chunk[date], next, provisionalReason(chunk[date], next, { basePrice, overwrite }), { basePrice, level: levels[date] }), { delay: reveal() });
             }
         }
         await reveal.settled();
@@ -648,6 +659,7 @@ async function plan() {
         weekdayPattern: site?.supportsWeekdayPattern === true,
         notBefore: today(),
     });
+    state.applied = new Set();
     renderPlan(state.plan);
     $('progress').hidden = true;
     if (state.plan.ops.length) {
@@ -707,10 +719,11 @@ function renderPlan(p) {
 }
 
 /**
- * Apparence d'une nuit du plan : bon prix, prix différent, personnalisée
- * conservée ou personnalisée écrasée ; réservée, bloquée et passée par-dessus.
+ * Apparence d'une nuit du plan : au bon prix (vert), à modifier (la couleur
+ * du tarif qui va lui être appliqué, et choisissable), ou conservée telle
+ * quelle (grise) ; réservée, bloquée et passée par-dessus.
  */
-function planCell(date, cur, next, reason, { basePrice }) {
+function planCell(date, cur, next, reason, { basePrice, level }) {
     const flags = [];
     if (cur?.reserved) {
         flags.push('reserved');
@@ -740,70 +753,146 @@ function planCell(date, cur, next, reason, { basePrice }) {
     if (flags.includes('blocked')) {
         notes.push('bloquée');
     }
-    const state = same ? 'ok' : kept ? 'custom' : isCustom && !flags.includes('reserved') && !flags.includes('past') ? 'custom-diff' : 'diff';
-    return {
-        state,
-        flags,
-        title: `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`,
-    };
+    const title = `${describeDate(date)} · ${cur.price} €${same ? '' : ` → ${next.price} €`}${notes.length ? ` · ${notes.join(', ')}` : ''}`;
+    const applied = !same && !kept && !flags.includes('reserved') && !flags.includes('past');
+    if (applied) {
+        return { level, flags, selectable: true, title };
+    }
+    return { state: same ? 'ok' : 'custom', flags, title };
 }
 
 /**
- * Grille du plan : chaque nuit de l'année cible est au bon prix ou à un prix
- * différent ; réservée ou passée s'ajoutent par-dessus. Sans plan (`null`),
- * toutes les nuits sont en attente de lecture. À l'application, les nuits
- * modifiées passent au bon prix.
+ * Grille du plan : chaque nuit de l'année cible est au bon prix, à modifier
+ * (dans la couleur du tarif à appliquer) ou conservée telle quelle ; réservée
+ * ou passée s'ajoutent par-dessus. Sans plan (`null`), toutes les nuits sont
+ * en attente de lecture. Les nuits à modifier se choisissent sur la grille ;
+ * à l'application, elles passent au bon prix.
  */
 function renderPlanGrid(p) {
     const cells = {};
     const basePrice = Number($('base-price').value);
-    const overwrite = $('overwrite').checked;
     const proposed = state.proposed ?? {};
     const current = state.current ?? {};
     const skipped = new Map((p?.skipped ?? []).map((s) => [s.date, s.reason]));
+    const scale = priceLevels(proposed);
     for (const [date, next] of Object.entries(proposed)) {
         cells[date] = p
-            ? planCell(date, current[date], next, skipped.get(date), { basePrice })
+            ? planCell(date, current[date], next, skipped.get(date), { basePrice, level: scale.levels[date] })
             : { state: 'pending', title: `${describeDate(date)} · lecture en cours` };
     }
-    const seen = new Set(Object.values(cells).flatMap((c) => c.flags ?? []));
+    const seen = new Set(Object.values(cells).flatMap((c) => [...(c.flags ?? []), c.state]));
     state.planGrid = renderYearGrid($('plan-grid'), state.targetYear, cells, {
         legend: [
-            { state: 'ok', label: 'bon prix, conservée' },
-            { state: 'diff', label: 'à modifier' },
-            overwrite ? { state: 'custom-diff', label: 'personnalisée, écrasée' } : { state: 'custom', label: 'personnalisée, conservée' },
+            { scale: [scale.min, scale.max], label: 'à appliquer' },
+            { state: 'ok', label: 'déjà au bon prix' },
+            ...(seen.has('custom') || !p ? [{ state: 'custom', label: 'conservée telle quelle' }] : []),
             ...(seen.has('reserved') || !p ? [{ flags: ['reserved'], label: 'réservée' }] : []),
             ...(seen.has('blocked') ? [{ flags: ['blocked'], label: 'bloquée' }] : []),
             ...(seen.has('past') ? [{ state: 'ok', flags: ['past'], label: 'passée' }] : []),
         ],
+        onSelect: p ? syncSelectionButton : null,
     });
     return state.planGrid;
 }
 
+/** Une nuit enregistrée au bon prix n'est plus à choisir. */
 function markOp(op, stateName) {
     for (const date of eachDay(op.from, op.to)) {
-        state.planGrid?.setState(date, stateName);
+        state.planGrid?.setState(date, stateName, { selectable: stateName !== 'ok' });
     }
 }
 
-async function apply() {
-    const delay = Number($('delay').value) || 1500;
-    const ops = state.plan.ops;
-    setApply(false, 'Application en cours');
+/** Opérations du plan sur les nuits données, sans celles déjà enregistrées. */
+function opsFor(dates) {
+    return opsForDates(state.plan.ops, [...dates].filter((date) => !state.applied.has(date)), { weekdayPattern: site?.supportsWeekdayPattern === true });
+}
+
+function plannedDates() {
+    return state.plan.ops.flatMap((op) => [...eachDay(op.from, op.to)]);
+}
+
+/*
+ * Pause et arrêt de l'enregistrement. Une opération, une fois lancée dans la
+ * page, va jusqu'au bout (sélection, saisie, enregistrement, vérification) :
+ * la pause comme l'arrêt prennent effet entre deux opérations.
+ */
+const run = { paused: false, stopped: false, resume: null };
+/* Le site a confirmé l'opération précédente avant qu'elle ne rende la main : un simple souffle entre deux. */
+const BREATH_MS = 400;
+
+function setRunning(running) {
+    for (const id of ['apply', 'apply-selection']) {
+        $(id).hidden = running;
+    }
+    for (const id of ['pause', 'stop']) {
+        $(id).hidden = !running;
+        $(id).disabled = false;
+    }
+    run.paused = false;
+    run.stopped = false;
+    run.resume = null;
+    $('pause').textContent = 'Mettre en pause';
+    $('pause').classList.remove('primary');
+}
+
+function setPaused(paused) {
+    run.paused = paused;
+    $('pause').textContent = paused ? 'Reprendre' : 'Mettre en pause';
+    $('pause').classList.toggle('primary', paused);
+    $('apply-hint').textContent = paused ? 'Pause à la fin de l\'opération en cours' : '';
+    if (!paused) {
+        run.resume?.();
+    }
+}
+
+function requestStop() {
+    run.stopped = true;
+    $('stop').disabled = true;
+    $('pause').disabled = true;
+    $('apply-hint').textContent = run.resume ? '' : 'Arrêt à la fin de l\'opération en cours';
+    log('Arrêt demandé');
+    run.resume?.();
+}
+
+/** Attend la reprise si une pause est demandée ; vrai si l'arrêt a été demandé entre-temps. */
+async function pauseGate(done, total) {
+    if (run.paused && !run.stopped) {
+        $('plan-summary').textContent = `En pause après ${done}/${total} opérations`;
+        $('apply-hint').textContent = '';
+        await new Promise((resolve) => { run.resume = resolve; });
+        run.resume = null;
+    }
+    return run.stopped;
+}
+
+async function applyOps(ops) {
+    if (!ops.length) {
+        return;
+    }
+    setApply(false, '');
     $('plan').disabled = true;
     applying = true;
+    setRunning(true);
     const totalNights = ops.reduce((sum, op) => sum + op.nights, 0);
     let done = 0;
     let doneNights = 0;
     let failed = false;
+    let stopped = false;
     setProgress(0, totalNights);
     try {
         for (const op of ops) {
+            if (await pauseGate(done, ops.length)) {
+                stopped = true;
+                break;
+            }
             $('plan-summary').textContent = `Enregistrement en cours : ${describeOp(op)} du ${op.from} au ${op.to}`;
             markOp(op, 'busy');
             try {
                 await callAdapter('applyPrice', op);
                 markOp(op, 'ok');
+                for (const date of eachDay(op.from, op.to)) {
+                    state.applied.add(date);
+                }
                 done += 1;
                 doneNights += op.nights;
                 setProgress(doneNights, totalNights);
@@ -815,19 +904,30 @@ async function apply() {
                 log(`Arrêt : ${e.message}`, 'error');
                 break;
             }
-            await new Promise((r) => setTimeout(r, delay));
+            await new Promise((r) => setTimeout(r, BREATH_MS));
         }
     }
     finally {
         applying = false;
+        setRunning(false);
     }
     const complete = done === ops.length && !failed;
     $('plan-summary').textContent = complete
-        ? `${done} opérations enregistrées, ${state.plan.changed} nuits au bon prix`
-        : `Enregistrement interrompu après ${done}/${ops.length} opérations, voir le journal`;
-    log(`${done}/${ops.length} opérations appliquées`, complete ? 'ok' : 'error');
+        ? `${done} opérations enregistrées, ${doneNights} nuits au bon prix`
+        : stopped
+            ? `Enregistrement arrêté après ${done}/${ops.length} opérations`
+            : `Enregistrement interrompu après ${done}/${ops.length} opérations, voir le journal`;
+    log(`${done}/${ops.length} opérations appliquées`, complete || stopped ? 'ok' : 'error');
     $('plan').disabled = false;
-    setApply(false, complete ? 'Enregistré, prévisualisez à nouveau pour vérifier' : 'Interrompu, prévisualisez à nouveau pour reprendre');
+    const outcome = complete ? 'Enregistré' : stopped ? 'Arrêté' : 'Interrompu';
+    const remaining = opsFor(plannedDates()).reduce((sum, op) => sum + op.nights, 0);
+    if (remaining) {
+        setApply(true);
+        $('apply-hint').textContent = `${outcome} · ${remaining} nuits restent à appliquer, en tout ou sur une sélection`;
+    }
+    else {
+        setApply(false, `${outcome}, prévisualisez à nouveau pour vérifier`);
+    }
 }
 
 /* ---------- Câblage ---------- */
@@ -838,10 +938,11 @@ $('read').addEventListener('click', readCalendar);
 $('export').addEventListener('click', exportJson);
 $('import').addEventListener('change', (e) => e.target.files[0] && importJson(e.target.files[0]));
 $('mode').addEventListener('change', syncMode);
-for (const id of ['factor', 'rounding', 'special-days', 'delay']) {
+for (const id of ['factor', 'rounding', 'special-days']) {
     $(id).addEventListener('change', saveSettings);
 }
 await restoreSettings();
+$('journal').addEventListener('toggle', saveSettings);
 document.addEventListener('click', (e) => {
     const settings = $('settings');
     if (settings.open && !settings.contains(e.target)) {
@@ -849,7 +950,10 @@ document.addEventListener('click', (e) => {
     }
 });
 $('plan').addEventListener('click', simulate);
-$('apply').addEventListener('click', apply);
+$('apply').addEventListener('click', () => applyOps(opsFor(plannedDates())));
+$('apply-selection').addEventListener('click', () => applyOps(opsFor(state.planGrid.selected())));
+$('pause').addEventListener('click', () => setPaused(!run.paused));
+$('stop').addEventListener('click', requestStop);
 
 chrome.tabs.onActivated.addListener(({ tabId }) => {
     if (!applying && tabId !== boundTab) {

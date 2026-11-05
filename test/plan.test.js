@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { toRanges, toWeekdayRanges, priceForDate, describeOp } from '../src/core/ranges.js';
-import { planUpdates } from '../src/core/plan.js';
+import { planUpdates, opsForDates } from '../src/core/plan.js';
 import { detectBasePrice } from '../src/core/basePrice.js';
 import { validateExport, createExport, scalePrices, exportFileName } from '../src/core/schema.js';
 
@@ -92,4 +92,17 @@ test('exportFileName simplifie le nom de l\'annonce, ou reprend son identifiant'
     assert.equal(exportFileName({ ...base, listingName: 'Chalet avec vue sur le Grand Bec & Courchevel' }), 'prix-airbnb-chalet-avec-vue-sur-le-grand-bec-courchevel-2027.bnbprices');
     assert.equal(exportFileName({ ...base, listingName: null }), 'prix-airbnb-850769363996753698-2027.bnbprices');
     assert.equal(exportFileName({ site: 'abritel', listingId: '731.2733329.2910262', listingName: '  ', year: 2027, extension: '.bnbprices' }), 'prix-abritel-731-2733329-2910262-2027.bnbprices');
+});
+
+test('opsForDates ne garde que les nuits choisies et les regroupe à nouveau', () => {
+    const ops = toRanges({ '2027-01-01': 100, '2027-01-02': 100, '2027-01-03': 100, '2027-01-04': 120, '2027-01-05': 120 });
+    assert.deepEqual(opsForDates(ops, ['2027-01-02', '2027-01-03', '2027-01-05', '2027-06-01']), [
+        { from: '2027-01-02', to: '2027-01-03', price: 100, nights: 2 },
+        { from: '2027-01-05', to: '2027-01-05', price: 120, nights: 1 },
+    ]);
+    assert.deepEqual(opsForDates(ops, []), []);
+    const weekly = toWeekdayRanges({ '2027-01-01': 100, '2027-01-02': 150, '2027-01-03': 100, '2027-01-04': 100 });
+    assert.deepEqual(opsForDates(weekly, ['2027-01-02', '2027-01-03'], { weekdayPattern: true }), [
+        { from: '2027-01-02', to: '2027-01-03', nights: 2, price: null, byWeekday: { saturday: 150, sunday: 100 } },
+    ]);
 });

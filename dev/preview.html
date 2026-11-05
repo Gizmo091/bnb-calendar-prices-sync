@@ -103,13 +103,13 @@
         const pc = {};
         for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'pending', title: 'lecture en cours' };
         const grid = renderYearGrid($('plan-grid'), 2027, pc, { legend: [
-            { state: 'ok', label: 'bon prix, conservée' }, { state: 'diff', label: 'à modifier' }, overwrite ? { state: 'custom-diff', label: 'personnalisée, écrasée' } : { state: 'custom', label: 'personnalisée, conservée' },
+            { scale: [118, 398], label: 'à appliquer' }, { state: 'ok', label: 'déjà au bon prix' }, { state: 'custom', label: 'conservée telle quelle' },
             { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }, { state: 'ok', flags: ['past'], label: 'passée' },
         ] });
         $('apply-hint').textContent = 'Prévisualisation en cours';
         log('Lecture des prix actuels de 2027 pour comparaison…');
         // Lecture simulée : un mois toutes les 600 ms, révélé case par case.
-        const specOf = (d) => d < '2027-02-06' ? { state: 'custom' } : d < '2027-03-08' ? { state: 'diff' } : (d >= '2027-02-13' && d <= '2027-02-20') ? { state: 'ok', flags: ['reserved'] } : { state: 'ok' };
+        const specOf = (d) => d < '2027-02-06' ? { state: 'custom' } : d < '2027-03-08' ? { level: weekday(d) === 6 ? 1 : 0.4, selectable: true } : (d >= '2027-02-13' && d <= '2027-02-20') ? { state: 'ok', flags: ['reserved'] } : { state: 'ok' };
         let cursor = performance.now();
         grid.setState('2027-01-01', 'next');
         for (let m = 1; m <= 12; m++) {
@@ -155,20 +155,37 @@
         for (const d of eachDay('2027-01-01', '2027-12-31')) pc[d] = { state: 'ok' };
         const overwrite = params.has('overwrite');
         $('overwrite').checked = overwrite;
-        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = overwrite ? { state: 'custom-diff', title: `${d} · 166 € → 220 € · personnalisée, écrasée` } : { state: 'custom', title: `${d} · 166 € · personnalisée, conservée` };
+        // Niveau de prix des tarifs à appliquer, sur l'échelle de l'année projetée (118 → 398 €).
+        const opPrices = [[220, 398], [118, 237], [150, 260], [178, 355]];
+        const { levels: opLevels } = priceLevels(Object.fromEntries(opPrices.flat().map((p) => [p, { price: p }])));
+        for (const d of eachDay('2027-01-01', '2027-02-05')) pc[d] = overwrite ? { level: opLevels[220], selectable: true, title: `${d} · 166 € → 220 € · personnalisée, écrasée` } : { state: 'custom', title: `${d} · 166 € · personnalisée, conservée` };
         for (const d of eachDay('2027-02-13', '2027-02-20')) pc[d] = { state: 'ok', flags: ['reserved'] };
         for (const d of eachDay('2027-10-01', '2027-10-10')) pc[d] = { state: 'ok', flags: ['blocked'] };
         for (const d of eachDay('2027-01-01', '2027-01-15')) pc[d] = { ...pc[d], flags: [...(pc[d].flags ?? []), 'past'] };
         ops.forEach(([f, t], i) => {
             for (const d of eachDay(f, t)) {
                 if (pc[d].flags) continue;
-                pc[d] = { state: stage === 'applied' ? (i < 2 ? 'ok' : i === 2 ? 'busy' : 'diff') : 'diff' };
+                const price = opPrices[i][weekday(d) === 6 ? 1 : 0];
+                const planned = { level: opLevels[price], selectable: true, title: `${d} · 160 € → ${price} € · à modifier` };
+                pc[d] = stage === 'applied' ? (i < 2 ? { state: 'ok' } : i === 2 ? { ...planned, state: 'busy' } : planned) : planned;
             }
         });
-        renderYearGrid($('plan-grid'), 2027, pc, { legend: [
-            { state: 'ok', label: 'bon prix, conservée' }, { state: 'diff', label: 'à modifier' }, overwrite ? { state: 'custom-diff', label: 'personnalisée, écrasée' } : { state: 'custom', label: 'personnalisée, conservée' },
-            { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }, { state: 'ok', flags: ['past'], label: 'passée' },
-        ] });
+        const grid = renderYearGrid($('plan-grid'), 2027, pc, {
+            legend: [
+                { scale: [118, 398], label: 'à appliquer' }, { state: 'ok', label: 'déjà au bon prix' }, { state: 'custom', label: 'conservée telle quelle' },
+                { flags: ['reserved'], label: 'réservée' }, { flags: ['blocked'], label: 'bloquée' }, { state: 'ok', flags: ['past'], label: 'passée' },
+            ],
+            onSelect: (dates) => {
+                $('apply-selection').disabled = dates.length === 0;
+                $('apply-selection').textContent = dates.length ? `Appliquer à la sélection (${dates.length} nuit${dates.length > 1 ? 's' : ''})` : 'Appliquer à la sélection';
+            },
+        });
+        if (params.has('selected')) {
+            for (const d of eachDay('2027-07-10', '2027-07-24')) $('plan-grid').querySelector(`[data-date="${d}"][data-selectable]`)?.toggleAttribute('data-selected', true);
+            $('apply-selection').disabled = false;
+            $('apply-selection').textContent = `Appliquer à la sélection (${grid.selected().length} nuits)`;
+        }
+        $('apply-hint').textContent = 'Cliquez ou glissez sur la grille pour n\'appliquer qu\'une partie des nuits';
         const ul = $('skipped-list');
         for (const d of eachDay('2027-01-02', '2027-01-09')) {
             const li = document.createElement('li');

@@ -1,4 +1,5 @@
-import { toRanges, toWeekdayRanges } from './ranges.js';
+import { toRanges, toWeekdayRanges, priceForDate } from './ranges.js';
+import { eachDay } from './dates.js';
 
 /**
  * Compare les prix actuels aux prix proposés et ne retient que les nuits
@@ -49,4 +50,23 @@ export function planUpdates(current, proposed, { basePrice, overwriteCustom = fa
     }
     const ops = weekdayPattern ? toWeekdayRanges(toApply) : toRanges(toApply);
     return { ops, skipped, unchanged, past, changed: Object.keys(toApply).length };
+}
+
+/**
+ * Restreint les opérations d'un plan à quelques nuits : les prix prévus sur ces
+ * seules nuits sont regroupés à nouveau, avec la même logique que le plan.
+ * @param {Array<{from:string,to:string,price:number|null,byWeekday?:Object}>} ops
+ * @param {Iterable<string>} dates
+ */
+export function opsForDates(ops, dates, { weekdayPattern = false } = {}) {
+    const wanted = new Set(dates);
+    const prices = {};
+    for (const op of ops) {
+        for (const date of eachDay(op.from, op.to)) {
+            if (wanted.has(date)) {
+                prices[date] = priceForDate(op, date);
+            }
+        }
+    }
+    return weekdayPattern ? toWeekdayRanges(prices) : toRanges(prices);
 }

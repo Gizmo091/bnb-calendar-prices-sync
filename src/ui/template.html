@@ -1,6 +1,5 @@
 <div class="panel" id="panel">
   <header>
-    <span class="brand">BnB Calendar Prices Sync</span>
     <span id="site-info" class="meta"></span>
   </header>
 
@@ -106,17 +105,15 @@
             <button type="button" class="info" aria-label="Que mesure la cohérence" aria-describedby="share-help">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
             </button>
-            <span id="share-help" role="tooltip" class="tip right">Part des nuits de la période qui étaient au prix retenu. 100 % : toutes les nuits avaient ce prix. Moins : les prix variaient dans la période et le plus fréquent a été gardé.</span>
+            <span id="share-help" role="tooltip" class="tip">Part des nuits de la période qui étaient au prix retenu. 100 % : toutes les nuits avaient ce prix. Moins : les prix variaient dans la période et le plus fréquent a été gardé.</span>
           </span>
         </th></tr></thead><tbody></tbody></table>
       </details>
-    </section>
-
-    <section>
-      <h2><span class="step">04</span>Enregistrer sur le site</h2>
-      <div class="row">
-        <label class="field">Pause (ms) <input id="delay" type="number" min="200" step="100" value="1500"></label>
-        <button id="apply" type="button" disabled class="primary">Enregistrer sur le site</button>
+      <div class="row apply-row">
+        <button id="apply" type="button" disabled class="primary">Appliquer tous les tarifs</button>
+        <button id="apply-selection" type="button" disabled>Appliquer à la sélection</button>
+        <button id="pause" type="button" hidden>Mettre en pause</button>
+        <button id="stop" type="button" hidden>Arrêter</button>
       </div>
       <div id="progress" class="progress" hidden role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="track"><i></i></div>
@@ -128,8 +125,10 @@
 
     </div>
     <section>
-      <h2>Journal</h2>
-      <pre id="log"></pre>
+      <details id="journal" class="journal" open>
+        <summary><h2>Journal</h2></summary>
+        <pre id="log"></pre>
+      </details>
     </section>
   </div>
 </div>
