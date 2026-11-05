@@ -166,6 +166,12 @@ Limites connues sur Airbnb :
 - Airbnb n'indique pas si un prix est personnalisé : une nuit est considérée
   comme personnalisée quand son prix diffère du prix de base.
 
+## Proposer une amélioration ou signaler un problème
+
+Pas besoin de compte : un formulaire de deux minutes, [en français](https://tally.so/r/VpjJNa)
+ou [en anglais](https://tally.so/r/7Xbx59), accessible aussi depuis le bas du panneau.
+Les développeurs peuvent préférer les [issues GitHub](https://github.com/Gizmo091/bnb-calendar-prices-sync/issues).
+
 ## Publication
 
 Les textes de la fiche du Chrome Web Store sont dans `store/`, les visuels se

@@ -592,6 +592,7 @@ async function applyLanguage() {
     await useLanguage($('language').value);
     translateDom(document.body);
     document.title = t('ext_name');
+    $('feedback').href = t('feedback_url');
     syncMode();
     syncSelectionButton();
     $('pause').textContent = t(run.paused ? 'btn_resume' : 'btn_pause');

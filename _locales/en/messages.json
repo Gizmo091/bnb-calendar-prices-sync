@@ -58,6 +58,9 @@
   "btn_pause": { "message": "Pause" },
   "btn_resume": { "message": "Resume" },
   "btn_stop": { "message": "Stop" },
+  "feedback_prompt": { "message": "An idea, a problem?" },
+  "feedback_link": { "message": "Suggest an improvement or report a problem" },
+  "feedback_url": { "message": "https://tally.so/r/7Xbx59" },
   "journal_title": { "message": "Log" },
   "log_empty": { "message": "Nothing yet" },
 

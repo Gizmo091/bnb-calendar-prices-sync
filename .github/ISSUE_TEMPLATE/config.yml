@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Proposer une amélioration ou une correction (sans compte)
+    url: https://tally.so/r/VpjJNa
+    about: Un formulaire de deux minutes, pour les hôtes qui n'ont pas l'habitude de GitHub.
+  - name: Suggest an improvement or report a problem (no account needed)
+    url: https://tally.so/r/7Xbx59
+    about: A two-minute form, for hosts who are not used to GitHub.

@@ -1,0 +1,34 @@
+name: Amélioration ou correction
+description: Pour les habitués de GitHub ; les autres ont le formulaire proposé à côté.
+labels: []
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: De quoi s'agit-il ?
+      options:
+        - Une amélioration
+        - Une correction
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Décrivez-le avec vos mots
+      description: Ce que vous voudriez, ou ce qui s'est passé et ce que vous attendiez à la place. Pour une correction, la ligne du journal en bas du panneau aide beaucoup.
+    validations:
+      required: true
+  - type: dropdown
+    id: site
+    attributes:
+      label: Site concerné
+      multiple: true
+      options:
+        - Airbnb
+        - Abritel / Vrbo
+        - Autre
+  - type: input
+    id: version
+    attributes:
+      label: Version de l'extension et de Chrome
+      placeholder: "0.2.0, Chrome 156"

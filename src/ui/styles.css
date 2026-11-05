@@ -110,7 +110,7 @@ header {
 section:has(+ section[hidden]) { border-bottom: 0; padding-bottom: 0; }
 
 section { padding: 16px 0 20px; border-bottom: 1px solid var(--hairline); }
-section:last-child { border-bottom: 0; padding-bottom: 0; }
+section:last-of-type { border-bottom: 0; padding-bottom: 0; }
 h2 { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 14px; font-weight: 600; line-height: 20px; letter-spacing: -.01em; }
 .inline-step h2 { margin: 0; }
 .inline-step .help { margin-left: -4px; }
@@ -419,6 +419,11 @@ details[open] > summary::before { transform: rotate(45deg) translateY(-2px); }
 summary::-webkit-details-marker { display: none; }
 
 ul#skipped-list { columns: 2; margin: 8px 0 0; padding: 0; list-style: none; font: 12px/20px var(--mono); color: var(--fg-2); }
+
+/* Un mot en bas du panneau pour les idées et les problèmes : le formulaire ne demande pas de compte. */
+.feedback { margin: 20px 0 0; font-size: 12px; line-height: 16px; color: var(--fg-3); }
+.feedback a { color: var(--brand-ink); font-weight: 500; text-decoration: none; }
+.feedback a:hover { text-decoration: underline; }
 
 /* ---------- Journal ---------- */
 

@@ -33,6 +33,7 @@
     translateDom(document.body);
     const retranslate = () => {
         translateDom(document.body);
+        document.getElementById('feedback').href = t('feedback_url');
         const [projectOption, asIsOption] = document.getElementById('mode').options;
         projectOption.textContent = t('mode_project', 2026);
         asIsOption.textContent = t('mode_as_is', 2026);

@@ -44,9 +44,15 @@ PRIVACY
 
 BnBridge talks only to the calendar page open in your browser and to public holiday APIs. Your prices stay in your browser's local storage and in the files you export. Nothing is sent to us or to anyone else, there is no account and no tracking. Full policy: https://github.com/Gizmo091/bnb-calendar-prices-sync/blob/main/PRIVACY.md
 
+An idea, a problem? A two-minute form, no account needed: https://tally.so/r/7Xbx59
+
 BnBridge is free and open source (https://github.com/Gizmo091/bnb-calendar-prices-sync). If it saves you an afternoon of clicking, you can buy me a coffee: https://www.buymeacoffee.com/mathieuvedie
 
 BnBridge is an independent project. It is not affiliated with, endorsed by or connected to Airbnb, Abritel, Vrbo or Expedia Group. The sites' interfaces change; if a step fails, the extension stops without writing and tells you what it saw in the log.
+
+## Support URL (store listing tab)
+
+https://tally.so/r/7Xbx59
 
 ## Single purpose (privacy tab)
 

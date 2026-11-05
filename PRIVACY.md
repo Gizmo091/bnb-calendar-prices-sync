@@ -21,6 +21,10 @@ data APIs for school and public holidays (data.education.gouv.fr and
 calendrier.api.gouv.fr for France, openholidaysapi.org for other countries),
 which receive nothing but the country and the year requested.
 
+**Suggestions and problem reports.** The form linked from the panel is hosted
+by Tally (tally.so). Only what you type in it is sent, including your email
+if you choose to give it, and it is used solely to follow up on your message.
+
 **How to delete your data.** Remove the extension, or clear its storage from
 `chrome://extensions`. Exported files are ordinary files on your computer.
 
@@ -53,6 +57,11 @@ des API publiques et anonymes d'open data pour les vacances scolaires et les
 jours fériés (data.education.gouv.fr et calendrier.api.gouv.fr pour la
 France, openholidaysapi.org pour les autres pays), qui ne reçoivent que le
 pays et l'année demandés.
+
+**Suggestions et signalements.** Le formulaire accessible depuis le panneau est
+hébergé par Tally (tally.so). Seul ce que vous y écrivez est envoyé, votre
+e-mail compris si vous choisissez de le donner, et ne sert qu'à donner suite
+à votre message.
 
 **Supprimer vos données.** Désinstallez l'extension, ou videz son stockage
 depuis `chrome://extensions`. Les fichiers exportés sont des fichiers
