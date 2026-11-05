@@ -110,6 +110,45 @@ function calendarQueryUrl() {
     return entries.reverse().find((u) => u.includes(`/api/v3/${API_OPERATION}/`)) ?? null;
 }
 
+/**
+ * La balise <title> du HTML servi porte le nom de l'annonce :
+ * « Modifier le calendrier pour <nom> - Airbnb » (ou l'équivalent anglais).
+ * Le script de la page réécrit ensuite le titre, donc on relit le HTML
+ * d'origine, une fois par page, et le titre courant ne sert qu'en secours.
+ */
+const nameCache = new Map();
+
+function nameFromTitle(title) {
+    const clean = (title ?? '').replace(/\s+/g, ' ').trim();
+    const known = clean.match(/(?:Modifier le calendrier pour|Edit calendar for)\s+(.+?)\s*-\s*Airbnb$/i);
+    if (known) {
+        return known[1].trim();
+    }
+    const bare = clean.replace(/\s*-\s*Airbnb$/i, '').trim();
+    return bare && bare !== clean ? bare : null;
+}
+
+async function servedTitle(url) {
+    const response = await fetch(url, { credentials: 'include', headers: { accept: 'text/html' } });
+    if (!response.ok) {
+        return null;
+    }
+    const html = await response.text();
+    return html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1].replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"') ?? null;
+}
+
+async function listingName() {
+    const url = location.origin + location.pathname;
+    if (!nameCache.has(url)) {
+        nameCache.set(url, servedTitle(url).then(nameFromTitle).catch(() => null));
+    }
+    const served = await nameCache.get(url);
+    if (!served) {
+        nameCache.delete(url);
+    }
+    return served ?? nameFromTitle(document.querySelector('title')?.textContent);
+}
+
 function apiKey() {
     return document.documentElement.innerHTML.match(/"api_config":\{"key":"([^"]+)"/)?.[1] ?? null;
 }
@@ -243,8 +282,7 @@ export default {
 
     async info() {
         const listingId = location.pathname.match(/\/multicalendar\/(\d+)/)?.[1] ?? null;
-        // Le titre de l'onglet porte le nom de l'annonce : « Modifier le calendrier pour <nom> - Airbnb ».
-        const name = document.title.match(/^(?:Modifier le calendrier pour|Edit calendar for)\s+(.+?)\s+-\s+Airbnb$/)?.[1] ?? null;
+        const name = listingId ? await listingName() : null;
         return { site: SITE, listingId, name, url: location.href, calibrated: CALIBRATED };
     },
 
