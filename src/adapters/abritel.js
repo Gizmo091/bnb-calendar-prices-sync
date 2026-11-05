@@ -86,10 +86,13 @@ function parseCell(td) {
     if (price === null) {
         return null;
     }
-    const marked = td.querySelector(SEL.event) !== null || td.querySelector('[aria-label]') !== null;
+    // Un événement dans la case est une réservation, directe ou importée
+    // d'un autre site par iCal ; la nuit n'est plus à tarifer.
+    const reserved = td.querySelector(SEL.event) !== null || td.querySelector('[aria-label]') !== null;
     return {
         price,
-        available: !marked && !/unavailable/.test(label),
+        available: !reserved && !/unavailable/.test(label),
+        reserved,
     };
 }
 

@@ -200,14 +200,16 @@ function renderDays(days, year) {
         const flags = [day.reserved ? 'réservée' : '', day.available === false ? 'bloquée' : '', day.promotion ? 'promotion' : ''].filter(Boolean);
         cells[date] = {
             level: levels[date],
-            state: day.reserved ? 'reserved' : undefined,
+            state: day.reserved ? 'reserved' : day.available === false ? 'blocked' : undefined,
             title: `${describeDate(date)} · ${price}${flags.length ? ` · ${flags.join(', ')}` : ''}`,
         };
     }
+    const states = new Set(Object.values(cells).map((c) => c.state));
     const legend = min === undefined ? [] : [
         { level: 1, label: `${min} €` },
         { level: 5, label: `${max} €` },
-        { state: 'reserved', label: 'réservée' },
+        ...(states.has('reserved') ? [{ state: 'reserved', label: 'réservée' }] : []),
+        ...(states.has('blocked') ? [{ state: 'blocked', label: 'bloquée' }] : []),
     ];
     renderYearGrid($('read-grid'), year, cells, { legend });
 }
@@ -393,7 +395,7 @@ function syncMode() {
     const year = state?.year ?? Number($('year').value);
     const [project, asIs] = $('mode').options;
     project.textContent = `Reporter les tarifs de ${year} sur une autre année`;
-    asIs.textContent = `Appliquer les tarifs à l'année ${year}`;
+    asIs.textContent = `Reprendre les tarifs tels quels sur ${year}`;
     $('target-year-field').hidden = $('mode').value !== 'project';
 }
 
@@ -409,6 +411,7 @@ async function plan() {
         log(`${e.message} — simulation faite en supposant toutes les nuits au prix de base`, 'error');
         current = Object.fromEntries(Object.keys(state.proposed).map((d) => [d, { price: basePrice, custom: false }]));
     }
+    state.current = current;
     state.plan = planUpdates(current, state.proposed, {
         basePrice,
         overwriteCustom: $('overwrite').checked,
@@ -448,10 +451,17 @@ function renderPlanGrid(p) {
     const proposed = state.proposed ?? {};
     const describe = (date, label) => `${describeDate(date)} · ${label}`;
     const todayIso = today();
+    const current = state.current ?? {};
     for (const date of Object.keys(proposed)) {
-        cells[date] = date < todayIso
-            ? { state: 'past', title: describe(date, 'passée') }
-            : { state: 'unchanged', title: describe(date, `${proposed[date].price} € déjà en place`) };
+        if (date < todayIso) {
+            cells[date] = { state: 'past', title: describe(date, 'passée') };
+        }
+        else if (current[date]?.reserved) {
+            cells[date] = { state: 'reserved', title: describe(date, `réservée, ${current[date].price} € conservé`) };
+        }
+        else {
+            cells[date] = { state: 'unchanged', title: describe(date, `${proposed[date].price} € déjà en place`) };
+        }
     }
     for (const s of p.skipped) {
         cells[s.date] = { state: s.reason, title: describe(s.date, `${SKIP_LABELS[s.reason] ?? s.reason}${s.reason === 'custom' ? `, ${s.current} € conservé` : ''}`) };

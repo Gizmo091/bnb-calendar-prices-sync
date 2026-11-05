@@ -220,6 +220,9 @@ label.file input { display: none; }
 .cell[data-state="reserved"] {
     background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--fg) 32%, var(--raised)) 0 2px, var(--raised) 2px 4px);
 }
+.cell[data-state="blocked"] {
+    background: repeating-linear-gradient(135deg, color-mix(in oklab, var(--fg) 14%, var(--raised)) 0 2px, var(--raised) 2px 4px);
+}
 .cell[data-state="past"] { background: var(--raised); opacity: .4; }
 .cell[data-state="unknown"] { background: transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
 @keyframes busy { to { opacity: .55; } }
